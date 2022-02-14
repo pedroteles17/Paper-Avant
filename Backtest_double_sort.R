@@ -148,8 +148,8 @@ colnames(size_vol) <- paste0("D", 1:10)
 
 file_name <- paste0(getwd(), "/Portfolios")
 
-write.csv(as.data.frame(size_vol), paste0(file_name, "\\double_sort_size.csv"))
-write.csv(as.data.frame(quality_vol), paste0(file_name, "\\double_sort_quality.csv"))
-write.csv(as.data.frame(mom_vol), paste0(file_name, "\\double_sort_mom.csv"))
-write.csv(as.data.frame(value_vol), paste0(file_name, "\\double_sort_value.csv"))
+write.csv(data.frame(Data = index(size_vol), size_vol), paste0(file_name, "\\double_sort_size.csv"), row.names = FALSE)
+write.csv(data.frame(Data = index(quality_vol), quality_vol), paste0(file_name, "\\double_sort_quality.csv"), row.names = FALSE)
+write.csv(data.frame(Data = index(mom_vol), mom_vol), paste0(file_name, "\\double_sort_mom.csv"), row.names = FALSE)
+write.csv(data.frame(Data = index(value_vol), value_vol), paste0(file_name, "\\double_sort_value.csv"), row.names = FALSE)
 

@@ -120,9 +120,10 @@ colnames(ret_port_size) <- paste0("D", seq(1,10))
 
 file_name <- paste0(getwd(), "/Portfolios")
 
-write.csv(as.data.frame(ret_port_vol), paste0(file_name, "\\simple_sort_vol_10.csv"))
-write.csv(as.data.frame(ret_port_vol_3), paste0(file_name, "\\simple_sort_vol_3.csv"))
-write.csv(as.data.frame(ret_port_mom), paste0(file_name, "\\simple_sort_mom_10.csv"))
-write.csv(as.data.frame(ret_port_size), paste0(file_name, "\\simple_sort_size_10.csv"))
-write.csv(as.data.frame(ret_port_quality), paste0(file_name, "\\simple_sort_quality_10.csv"))
-write.csv(as.data.frame(ret_port_value), paste0(file_name, "\\simple_sort_value_10.csv"))
+write.csv(data.frame(Data = index(ret_port_vol), ret_port_vol), paste0(file_name, "\\simple_sort_vol_10.csv"), row.names = FALSE)
+write.csv(data.frame(Data = index(ret_port_vol_3), ret_port_vol_3), paste0(file_name, "\\simple_sort_vol_3.csv"), row.names = FALSE)
+write.csv(data.frame(Data = index(ret_port_mom), ret_port_mom), paste0(file_name, "\\simple_sort_mom_10.csv"), row.names = FALSE)
+write.csv(data.frame(Data = index(ret_port_size), ret_port_size), paste0(file_name, "\\simple_sort_size_10.csv"), row.names = FALSE)
+write.csv(data.frame(Data = index(ret_port_quality), ret_port_quality), paste0(file_name, "\\simple_sort_quality_10.csv"), row.names = FALSE)
+write.csv(data.frame(Data = index(ret_port_value), ret_port_value), paste0(file_name, "\\simple_sort_value_10.csv"), row.names = FALSE)
+
