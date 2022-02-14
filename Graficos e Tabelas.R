@@ -12,7 +12,7 @@ library(pBrackets)
 library(grid)
 
 
-dados <- readr::read_csv("Portfolios\\simple_sort_vol_3.csv") %>% 
+dados <- readr::read_csv("Portfolios\\simple_sort_vol_3.csv", col_types = "Dnnn") %>% 
   set_names(c("Data", "LowVol", "MidVol", "HighVol"))
 
 dados$LongShort <- dados$LowVol - dados$HighVol
@@ -20,7 +20,7 @@ dados$LongShort <- dados$LowVol - dados$HighVol
 nefin <- read_excel("nefin.xlsx", col_types = c("date", rep("numeric", 6))) %>%
   dplyr::filter(Data >= "2003-01-01" & Data <= "2021-12-31")
 
-indice <- read_csv("Brasil\\indice.csv", col_types = paste(c("D", "n"), collapse = "")) %>%
+indice <- read_csv("Brasil\\indice.csv", col_types = "Dn") %>%
   dplyr::filter(Data >= "2003-01-01" & Data <= "2021-12-31") %>% 
   set_names(c("Data", "IBX"))
 
@@ -57,7 +57,7 @@ estat_ret <- function(ret_port, ind, rf, nome_col) {
   resultados <- data.frame(c(
     ret_acumul, vol, SR, t_SR,
     rp_rf, beta, alfa, t_alfa
-  )) %>% set_names(nome_col)
+  )) 
   
   rownames(resultados) <- c(
     "Retorno Anualizado (%)",
@@ -125,18 +125,41 @@ analise_fatores <- function(retornos, tipo, nome_col){
   }
 }
 
-# Figura 1 – Plotagem das carteiras ordenadas por volatilidade ----
-
-vetor_betas <- vector(length = 3)
-for (i in seq_along(vetor_betas)) {
-  vetor_betas[i] <- coef(lm(I(dados[,i+1, drop = TRUE] - nefin$Risk_free) ~ I(indice$IBX - nefin$Risk_free)))[2]
+funcao_painel <- function(df_ret, ind, rf){
+  df_painel <- data.frame(df_ret, IBX = ind)
+  
+  painel <-  lapply(df_painel, function(x) estat_ret(x, ind, rf))
+  
+  painel <- do.call("cbind", painel) 
+  
+  colnames(painel) <- c(paste0("D", 1:(ncol(painel)-2)), "VOL", "Univ.")
+  
+  painel[c(3, 4), (ncol(painel)-1)] <- ""
+  painel[c(4, 6, 7, 8), ncol(painel)] <- ""
+  
+  regres_ls <- summary(lm(df_ret$LongShort ~ I(ind - rf)))$coefficients
+  alfa_regres <- round((prod(1 + regres_ls[1,1]) ^ 12 - 1) * 100, 2)
+  painel[c(6, 7, 8), (ncol(painel)-1)] <- c(round(regres_ls[2,1],2), alfa_regres, round(regres_ls[2,2],2))
+  
+  return(painel)
+  
 }
 
-port_betas_ret <- data.frame(Nome = c(paste0("P", 1:3)),
-                             Beta = vetor_betas,
-                             Ret_acumul = apply(dados[,c(2, 3, 4)], 2, function(x) prod(1+x)^(252/length(x)) - 1))
+# Figura 1 – Plotagem das carteiras ordenadas por volatilidade ----
 
-port_betas_ret <- rbind(port_betas_ret, c("IBX", 1, prod(1+indice$IBX)^(252/length(indice$IBX)) - 1))
+#dados_fig <- data.frame(dados[,c(-1, -ncol(dados))], IBX = indice$IBX)
+
+dados_fig <- read_csv("Portfolios\\simple_sort_vol_10.csv", col_types = "Dnnnnnnnnnn") %>%
+  mutate(IBX = indice$IBX) %>% dplyr::select(-1)
+
+vetor_betas <- vector(length = ncol(dados_fig))
+for (i in seq_along(vetor_betas)) {
+  vetor_betas[i] <- coef(lm(I(dados_fig[,i, drop = TRUE] - nefin$Risk_free) ~ I(indice$IBX - nefin$Risk_free)))[2]
+}
+
+port_betas_ret <- data.frame(Nome = c(paste0("P", 1:(length(vetor_betas)-1)), "IBX"),
+                             Beta = vetor_betas,
+                             Ret_acumul = apply(dados_fig, 2, function(x) prod(1+x)^(252/length(x)) - 1))
 
 reg_mod_coef <- coef(lm(Ret_acumul ~ Beta, data = port_betas_ret))
 
@@ -152,59 +175,58 @@ ggplot() + geom_point(data = port_betas_ret, aes(x = Beta, y = Ret_acumul)) +
   xlab("Beta") + ylab("Annualized Return") + 
   scale_y_continuous(expand = c(0.01, 0.02), labels = scales::percent_format(accuracy = 1)) 
 
-#grid::grid.locator()
 
-#grid.brackets(232, 80, 232, 247, lwd=0.5, col="blue", type = 2)
-#grid.brackets(690, 345, 690, 169, lwd=0.5, col="blue", type = 2)
-#grid.text(x=unit(555,'native'), y=unit(250,'native'), label=expression("Alfa negativo"), hjust = 0, vjust=0)
-#grid.text(x=unit(555,'native'), y=unit(275,'native'), label=expression("por ações de"), hjust = 0, vjust=0)
-#grid.text(x=unit(555,'native'), y=unit(295,'native'), label=expression("alta volat."), hjust = 0, vjust=0)
-#grid.text(x=unit(275,'native'), y=unit(150,'native'), label=expression("Alfa positivo"), hjust = 0, vjust=0)
-#grid.text(x=unit(275,'native'), y=unit(175,'native'), label=expression("por ações de"), hjust = 0, vjust=0)
-#grid.text(x=unit(275,'native'), y=unit(195,'native'), label=expression("baixa volat."), hjust = 0, vjust=0)
-
-rm(i, reg_mod_coef, sml, vetor_betas, port_betas_ret, ret_rf, ret_mercado_rf)
-
-
+rm(dados_fig, i, reg_mod_coef, sml, vetor_betas, port_betas_ret, ret_rf, ret_mercado_rf)
 
 
 # Tabela 1 – Resultados dos portfólios de baixa volatilidade ----
 
-## Painel C
+## Painel A
+df_vol_10 <- read_csv("Portfolios\\simple_sort_vol_10.csv", col_types = "Dnnnnnnnnnn")
+df_vol_10$LongShort <- df_vol_10$D1 - df_vol_10$D10
 
-tb1_painel_c <- funcao_painel(dados)
+tb1_painel_a <- funcao_painel(df_vol_10[,-1], indice$IBX, nefin$Risk_free)
 
 ## Painel B
 
 tb1_painel_b <- data.frame(media_max_perda(dados$LowVol, "D1"),
                            media_max_perda(dados$MidVol, "D2"),
                            media_max_perda(dados$HighVol, "D3"),
-                           media_max_perda(dados$LongShort, "D1-D3"),
-                           media_max_perda(dados$IBX, "Univ."))
+                           media_max_perda(dados$LongShort, "D1_D3"),
+                           media_max_perda(indice$IBX, "Univ."))
 
+## Painel C
+tb1_pan_c <- funcao_painel(dados[,-1], indice$IBX, nefin$Risk_free)
 
+rm(df_vol_10)
 
 
 # Tabela 2 – Divisão em períodos ----
 
 dados_03_08 <- dados %>% dplyr::filter(Data >= "2003-01-01" & Data <= "2008-12-31")
+indice_03_08 <- indice %>% dplyr::filter(Data >= "2003-01-01" & Data <= "2008-12-31")
+nefin_03_08 <- nefin %>% dplyr::filter(Data >= "2003-01-01" & Data <= "2008-12-31")
 
 dados_09 <- dados %>% dplyr::filter(Data >= "2009-01-01" & Data <= "2009-12-31")
+indice_09 <- indice %>% dplyr::filter(Data >= "2009-01-01" & Data <= "2009-12-31")
+nefin_09 <- nefin %>% dplyr::filter(Data >= "2009-01-01" & Data <= "2009-12-31")
 
 dados_10_21 <- dados %>% dplyr::filter(Data >= "2010-01-01" & Data <= "2021-12-31")
+indice_10_21 <- indice %>% dplyr::filter(Data >= "2010-01-01" & Data <= "2021-12-31")
+nefin_10_21 <- nefin %>% dplyr::filter(Data >= "2010-01-01" & Data <= "2021-12-31")
 
 ## Painel A
-tb2_painel_a <- funcao_painel(dados_03_08)
+tb2_painel_a <- funcao_painel(dados_03_08[,-1], indice_03_08$IBX, nefin_03_08$Risk_free)
 
 ## Painel B
-tb2_painel_b <- funcao_painel(dados_09)
+tb2_painel_b <- funcao_painel(dados_09[,-1], indice_09$IBX, nefin_09$Risk_free)
 
 ## Painel C
-tb2_painel_c <- funcao_painel(dados_10_21)
+tb2_painel_c <- funcao_painel(dados_10_21[,-1], indice_10_21$IBX, nefin_10_21$Risk_free)
 
-rm(dados_03_08, dados_09, dados_10_21)
-
-
+rm(dados_03_08, dados_09, dados_10_21,
+   indice_03_08, indice_09, indice_10_21,
+   nefin_03_08, nefin_09, nefin_10_21)
 
 
 # Tabela 3 – Regressão nos modelos multi-fatoriais ----
@@ -219,5 +241,72 @@ tb3_painel_b <- data.frame(analise_fatores(dados$LowVol, "t", "Menores Vol"),
                            analise_fatores(dados$MidVol, "t", "Intermediaria"),
                            analise_fatores(dados$HighVol, "t", "Maiores Vol"))
 
-clipr::write_clip(tb3_painel_b)
+# Tabela 4 -  Resultados dos portfólios formados com outros fatores ----
+
+## Painel A
+df_size <- read_csv("Portfolios\\simple_sort_size_10.csv", col_types = "Dnnnnnnnnnn")
+df_size$LongShort <- df_size$D1 - df_size$D10
+
+tb4_painel_a <- funcao_painel(df_size[,-1], indice$IBX, nefin$Risk_free)
+
+## Painel B
+df_value <- read_csv("Portfolios\\simple_sort_value_10.csv", col_types = "Dnnnnnnnnnn")
+df_value$LongShort <- df_value$D1 - df_value$D10
+
+tb4_painel_b <- funcao_painel(df_value[,-1], indice$IBX, nefin$Risk_free)
+
+## Painel C
+df_mom <- read_csv("Portfolios\\simple_sort_mom_10.csv", col_types = "Dnnnnnnnnnn")
+df_mom$LongShort <- df_mom$D1 - df_mom$D10
+
+tb4_painel_c <- funcao_painel(df_mom[,-1], indice$IBX, nefin$Risk_free)
+
+## Painel D
+df_quality <- read_csv("Portfolios\\simple_sort_quality_10.csv", col_types = "Dnnnnnnnnnn")
+df_quality$LongShort <- df_quality$D1 - df_quality$D10
+
+tb4_painel_d <- funcao_painel(df_quality[,-1], indice$IBX, nefin$Risk_free)
+
+rm(df_size, df_value, df_mom, df_quality)
+
+
+# Tabela 5 - Resultados dos portfólios formados por ordenamento duplo ----
+
+## Painel A
+df_size_vol <- read_csv("Portfolios\\double_sort_size.csv", col_types = "Dnnnnnnnnnn")
+df_size_vol$LongShort <- df_size_vol$D1 - df_size_vol$D10
+
+tb5_painel_a <- funcao_painel(df_size_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_a <- tb5_painel_a[ ,-11]
+
+## Painel B
+df_value_vol <- read_csv("Portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
+df_value_vol$LongShort <- df_value_vol$D1 - df_value_vol$D10
+
+tb5_painel_a <- funcao_painel(df_value_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_a <- tb5_painel_a[ ,-11]
+
+## Painel C
+df_mom_vol <- read_csv("Portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
+df_mom_vol$LongShort <- df_mom_vol$D1 - df_mom_vol$D10
+
+tb5_painel_a <- funcao_painel(df_mom_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_a <- tb5_painel_a[ ,-11]
+
+## Painel D
+df_quality_vol <- read_csv("Portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
+df_quality_vol$LongShort <- df_quality_vol$D1 - df_quality_vol$D10
+
+tb5_painel_a <- funcao_painel(df_quality_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_a <- tb5_painel_a[ ,-11]
+
+rm(df_size_vol, df_value_vol, df_mom_vol, df_quality_vol)
+
+
+
+
+
+
+
+
 
