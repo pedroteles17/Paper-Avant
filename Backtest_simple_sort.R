@@ -39,12 +39,6 @@ colnames(dbComp_ip) <- append("Ativos", as.character(data_inicial %m+% months(0:
 rm(data_inicial)
 dbComp_ip <- dbComp_ip %>% dplyr::filter(Ativos %ni% "RIPI4 BS Equity")
 
-#Importa o retorno diario do indice
-dbRet_ind <- read_csv(paste(path_dado, "indice.csv", sep = "\\"), col_types = c("D", "n"))
-
-# Importa o retorno diario da taxa livre de risco
-dbRisk_free <- read_csv(paste(path_dado, "rf.csv", sep = "\\"), col_types = c("D", "n"))
-  
 # Importa o retorno diário dos ativos que compoe o indice
 dbRet_ativos <- read_csv(paste(path_dado, "ativos.csv", sep = "\\"), col_types = c("D", rep("n", 304)))
   
@@ -70,7 +64,7 @@ colnames(ret_port_vol_3) <- paste0("D", seq(1,3))
 dbComp <- dbComp_ip
 
 # inicio, fim, vetor_hp, vetor_estim, df_indicador, estrat, ord, restr_exist
-lista_ativos <- params_estim(20021231, 20211231, c(1), c(12), dbRet_ativos, "Momentum", "asc", 0)
+lista_ativos <- params_estim(20021231, 20211231, c(1), c(6), dbRet_ativos, "Momentum", "asc", 0)
 
 ret_port_mom <- backtest_decil(lista_ativos[[1]][[1]], 20021231, 20211231, 10, "EW")
 
@@ -121,6 +115,8 @@ ret_port_size <- backtest_decil(lista_ativos[[1]][[1]], 20021231, 20211231, 10, 
 
 ret_port_size <- do.call("cbind.xts", lapply(ret_port_size, function(x) do.call("rbind.xts", x)))
 colnames(ret_port_size) <- paste0("D", seq(1,10))
+
+# Export ----
 
 file_name <- paste0(getwd(), "/Portfolios")
 
