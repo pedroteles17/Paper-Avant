@@ -80,7 +80,7 @@ media_max_perda <- function(ret, nome_col){
   media_max <- data.frame(c(
     media_alta, media_baixa,
     maior_perda
-  )) %>% set_names(nome_col)
+  ))
   
   rownames(media_max) <-c("Media das alturas", "Media das baixas", "Maior perda observada")
   
@@ -147,17 +147,19 @@ funcao_painel <- function(df_ret, ind, rf){
 
 # Figura 1 – Plotagem das carteiras ordenadas por volatilidade ----
 
-#dados_fig <- data.frame(dados[,c(-1, -ncol(dados))], IBX = indice$IBX)
+ibx_ew <- read_csv("Portfolios\\ibx_ew.csv", col_types = "Dn")
 
-dados_fig <- read_csv("Portfolios\\simple_sort_vol_10.csv", col_types = "Dnnnnnnnnnn") %>%
-  mutate(IBX = indice$IBX) %>% dplyr::select(-1)
+dados_fig <- data.frame(dados[,c(-1, -ncol(dados))], IBX = indice$IBX, IBX_EW = ibx_ew$IBX_EW)
+
+#dados_fig <- read_csv("Portfolios\\simple_sort_vol_10.csv", col_types = "Dnnnnnnnnnn") %>%
+  #mutate(IBX = indice$IBX, IBX_EW = ibx_ew$IBX_EW) %>% dplyr::select(-1)
 
 vetor_betas <- vector(length = ncol(dados_fig))
 for (i in seq_along(vetor_betas)) {
   vetor_betas[i] <- coef(lm(I(dados_fig[,i, drop = TRUE] - nefin$Risk_free) ~ I(indice$IBX - nefin$Risk_free)))[2]
 }
 
-port_betas_ret <- data.frame(Nome = c(paste0("P", 1:(length(vetor_betas)-1)), "IBX"),
+port_betas_ret <- data.frame(Nome = c(paste0("P", 1:(length(vetor_betas)-2)), "IBX", "IBX EW"),
                              Beta = vetor_betas,
                              Ret_acumul = apply(dados_fig, 2, function(x) prod(1+x)^(252/length(x)) - 1))
 
@@ -176,7 +178,7 @@ ggplot() + geom_point(data = port_betas_ret, aes(x = Beta, y = Ret_acumul)) +
   scale_y_continuous(expand = c(0.01, 0.02), labels = scales::percent_format(accuracy = 1)) 
 
 
-rm(dados_fig, i, reg_mod_coef, sml, vetor_betas, port_betas_ret, ret_rf, ret_mercado_rf)
+rm(ibx_ew, dados_fig, i, reg_mod_coef, sml, vetor_betas, port_betas_ret, ret_rf, ret_mercado_rf)
 
 
 # Tabela 1 – Resultados dos portfólios de baixa volatilidade ----
@@ -188,15 +190,15 @@ df_vol_10$LongShort <- df_vol_10$D1 - df_vol_10$D10
 tb1_painel_a <- funcao_painel(df_vol_10[,-1], indice$IBX, nefin$Risk_free)
 
 ## Painel B
+tb1_painel_b <- lapply(df_vol_10[,-1], function(x) media_max_perda(x))
+tb1_painel_b <- do.call("cbind", tb1_painel_b)
 
-tb1_painel_b <- data.frame(media_max_perda(dados$LowVol, "D1"),
-                           media_max_perda(dados$MidVol, "D2"),
-                           media_max_perda(dados$HighVol, "D3"),
-                           media_max_perda(dados$LongShort, "D1_D3"),
-                           media_max_perda(indice$IBX, "Univ."))
+tb1_painel_b <- data.frame(tb1_painel_b, media_max_perda(indice$IBX))
+
+colnames(tb1_painel_b) <- c(paste0("D", 1:10), "D1_D10", "Univ")
 
 ## Painel C
-tb1_pan_c <- funcao_painel(dados[,-1], indice$IBX, nefin$Risk_free)
+tb1_painel_c <- funcao_painel(dados[,-1], indice$IBX, nefin$Risk_free)
 
 rm(df_vol_10)
 
@@ -283,27 +285,48 @@ tb5_painel_a <- tb5_painel_a[ ,-11]
 df_value_vol <- read_csv("Portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
 df_value_vol$LongShort <- df_value_vol$D1 - df_value_vol$D10
 
-tb5_painel_a <- funcao_painel(df_value_vol[,-1], indice$IBX, nefin$Risk_free)
-tb5_painel_a <- tb5_painel_a[ ,-11]
+tb5_painel_b <- funcao_painel(df_value_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_b <- tb5_painel_b[ ,-11]
 
 ## Painel C
 df_mom_vol <- read_csv("Portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
 df_mom_vol$LongShort <- df_mom_vol$D1 - df_mom_vol$D10
 
-tb5_painel_a <- funcao_painel(df_mom_vol[,-1], indice$IBX, nefin$Risk_free)
-tb5_painel_a <- tb5_painel_a[ ,-11]
+tb5_painel_c <- funcao_painel(df_mom_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_c <- tb5_painel_c[ ,-11]
 
 ## Painel D
 df_quality_vol <- read_csv("Portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
 df_quality_vol$LongShort <- df_quality_vol$D1 - df_quality_vol$D10
 
-tb5_painel_a <- funcao_painel(df_quality_vol[,-1], indice$IBX, nefin$Risk_free)
-tb5_painel_a <- tb5_painel_a[ ,-11]
+tb5_painel_d <- funcao_painel(df_quality_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_d <- tb5_painel_d[ ,-11]
 
 rm(df_size_vol, df_value_vol, df_mom_vol, df_quality_vol)
 
 
+# Tabela 7 - Resultados dos portfólios ordenados por Beta ----
 
+## Painel A
+df_beta_10 <- read_csv("Portfolios\\simple_sort_beta_10.csv", col_types = "Dnnnnnnnnnn")
+df_beta_10$LongShort <- df_beta_10$D1 - df_beta_10$D10
+
+tb7_painel_a <- funcao_painel(df_beta_10[,-1], indice$IBX, nefin$Risk_free)
+
+## Painel B
+tb7_painel_b <- lapply(df_beta_10[,-1], function(x) media_max_perda(x))
+tb7_painel_b <- do.call("cbind", tb7_painel_b)
+
+tb7_painel_b <- data.frame(tb7_painel_b, media_max_perda(indice$IBX))
+
+colnames(tb7_painel_b) <- c(paste0("D", 1:10), "D1_D10", "Univ")
+
+## Painel C
+tb7_painel_c <- funcao_painel(dados[,-1], indice$IBX, nefin$Risk_free)
+
+rm(df_beta_10)
+
+clipr::write_clip(tb7_painel_c)
 
 
 
