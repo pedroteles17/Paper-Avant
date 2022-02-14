@@ -7,7 +7,7 @@ library(writexl)
 nome_indic <- c("value", "quality", "size")
 
 for (i in seq_along(nome_indic)) {
-  indic <- read_excel("IndicBalancoRaw.xlsx", sheet = i+1)
+  indic <- read_excel("Tratamento dos Dados\\IndicBalancoRaw.xlsx", sheet = i+1)
   
   colnames(indic)[1] <- "Data"
   
@@ -31,5 +31,5 @@ for (i in seq_along(nome_indic)) {
   
   file_name <- paste0(getwd(), "/Brasil")
   
-  write.csv(indic1, paste(file_name, paste(nome_indic[i], ".csv"), sep = "\\"), row.names=FALSE)
+  write.csv(indic1, paste(file_name, paste0(nome_indic[i], ".csv"), sep = "\\"), row.names=FALSE)
 }

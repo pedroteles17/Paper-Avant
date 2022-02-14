@@ -5,7 +5,7 @@ library(lubridate)
 library(writexl)
 
 
-preco_raw <- read_xlsx("PrecoRaw.xlsx", sheet = 2)
+preco_raw <- read_xlsx("Tratamento dos Dados\\PrecoRaw.xlsx", sheet = 2)
   
 preco_raw <- preco_raw[-1:-3, ]
 colnames(preco_raw)[1] <- "Data"
@@ -16,7 +16,7 @@ preco_raw <- preco_raw[order(preco_raw$Data), ]
 
 preco_raw <- data.frame(Data = preco_raw$Data, sapply(preco_raw[,-1], as.numeric)) %>% set_names(colnames(preco_raw))
   
-ind <- read_xlsx("PrecoRaw.xlsx", sheet = 3)
+ind <- read_xlsx("Tratamento dos Dados\\PrecoRaw.xlsx", sheet = 3)
 ind <- ind[-1:-3, ]
 colnames(ind)[1] <- "Data"
 ind$Data <- as.Date(as.numeric(ind$Data), origin="1899-12-30")
@@ -49,7 +49,7 @@ retornos <- as.data.frame(lapply(precos_locf, function(x) diff(x)/x[-length(x)])
 retornos <- retornos %>% dplyr::mutate(Data = precos$Data[-1], .before = 1)
 
 # Ajustamos os dados da taxa livre de risco para coincidir com as datas do índice  
-rf <- read_xlsx("Nefin.xlsx") %>% dplyr::select(Data, Risk_free)
+rf <- read_xlsx("Tratamento dos Dados\\Nefin.xlsx") %>% dplyr::select(Data, Risk_free)
 rf$Data <- as.Date(rf$Data)
 rf <- rf[order(rf$Data), ]
 rf$Risk_free <- cumprod(1 + rf$Risk_free)
