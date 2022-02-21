@@ -47,8 +47,8 @@ estat_ret <- function(ret_port, ind, rf, nome_col) {
   ret_acumul <- ret_period(ret_port)
   vol <- sd(ret_port) * sqrt(252)
   vol_ind <- sd(ind) * sqrt(252)
-  SR <- ret_period((ret_port - rf)) / vol
-  SR_ind <- ret_period((ind - rf)) / vol_ind
+  SR <- mean((ret_port - rf)) / sd(ret_port)
+  SR_ind <- mean((ind - rf)) / sd(ind)
   
   t_SR <- jobson_korkie_memmel(SR, SR_ind, cor(ret_port, ind), length(ret_port))
   
