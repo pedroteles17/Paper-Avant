@@ -31,6 +31,17 @@ jobson_korkie_memmel <- function(shrp1, shrp2, corel, n_obs){
   return(z)
 }
 
+estat_jkm(d_size10[,i+1], s_size10[,i+1], indice$IBX, nefin$Risk_free)
+
+estat_jkm <- function(ret1, ret2, ind, rf){
+  SR1 <- mean((ret1 - rf)) / sd(ret1)
+  SR2 <- mean((ret2 - rf)) / sd(ret2)
+  
+  t_SR <- jobson_korkie_memmel(SR1, SR2, cor(ret1, ret2), length(ret1))
+  
+  return(round(t_SR, 2))
+}
+
 estat_ret <- function(ret_port, ind, rf, nome_col) {
   
   ret_period <- function(ret) {
@@ -305,6 +316,52 @@ tb5_painel_d <- tb5_painel_d[ ,-11]
 
 rm(df_size_vol, df_value_vol, df_mom_vol, df_quality_vol)
 
+# Tabela 6 – t-valor da comparação entre IS ----
+
+## Painel A: Tamanho
+s_size10 <- read_csv("Portfolios\\simple_sort_size_10.csv", col_types = "Dnnnnnnnnnn")
+d_size10 <- read_csv("Portfolios\\double_sort_size.csv", col_types = "Dnnnnnnnnnn")
+
+tb6_painel_a <- as.data.frame(matrix(nrow = (ncol(s_size10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
+for (i in 1:nrow(tb6_painel_a)) {
+  tb6_painel_a[i, 1] <- estat_jkm(d_size10[,i+1, drop = TRUE], s_size10[,i+1, drop = TRUE], indice$IBX, nefin$Risk_free)
+}
+
+rm(s_size10, d_size10)
+
+## Painel B: Valor
+s_value10 <- read_csv("Portfolios\\simple_sort_value_10.csv", col_types = "Dnnnnnnnnnn")
+d_value10 <- read_csv("Portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
+
+tb6_painel_b <- as.data.frame(matrix(nrow = (ncol(s_value10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
+for (i in 1:nrow(tb6_painel_b)) {
+  tb6_painel_b[i, 1] <- estat_jkm(d_value10[,i+1, drop = TRUE], s_value10[,i+1, drop = TRUE], indice$IBX, nefin$Risk_free)
+}
+
+rm(s_value10, d_value10)
+
+## Painel C: Momentum
+s_mom10 <- read_csv("Portfolios\\simple_sort_mom_10.csv", col_types = "Dnnnnnnnnnn")
+d_mom10 <- read_csv("Portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
+
+tb6_painel_c <- as.data.frame(matrix(nrow = (ncol(s_mom10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
+for (i in 1:nrow(tb6_painel_c)) {
+  tb6_painel_c[i, 1] <- estat_jkm(d_mom10[,i+1, drop = TRUE], s_mom10[,i+1, drop = TRUE], indice$IBX, nefin$Risk_free)
+}
+
+rm(s_mom10, d_mom10)
+
+## Painel D: Qualidade
+s_quality10 <- read_csv("Portfolios\\simple_sort_quality_10.csv", col_types = "Dnnnnnnnnnn")
+d_quality10 <- read_csv("Portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
+
+tb6_painel_d <- as.data.frame(matrix(nrow = (ncol(s_quality10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
+for (i in 1:nrow(tb6_painel_d)) {
+  tb6_painel_d[i, 1] <- estat_jkm(d_quality10[,i+1, drop = TRUE], s_quality10[,i+1, drop = TRUE], indice$IBX, nefin$Risk_free)
+}
+
+rm(s_quality10, d_quality10)
+
 
 # Tabela 7 - Resultados dos portfólios ordenados por Beta ----
 
@@ -327,10 +384,4 @@ tb7_painel_c <- funcao_painel(dados[,-1], indice$IBX, nefin$Risk_free)
 
 rm(df_beta_10)
 
-clipr::write_clip(tb7_painel_c)
-
-
-
-
-
-
+clipr::write_clip(tb6_painel_d)
