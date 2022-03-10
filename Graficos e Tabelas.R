@@ -31,8 +31,6 @@ jobson_korkie_memmel <- function(shrp1, shrp2, corel, n_obs){
   return(z)
 }
 
-estat_jkm(d_size10[,i+1], s_size10[,i+1], indice$IBX, nefin$Risk_free)
-
 estat_jkm <- function(ret1, ret2, ind, rf){
   SR1 <- mean((ret1 - rf)) / sd(ret1)
   SR2 <- mean((ret2 - rf)) / sd(ret2)
@@ -193,24 +191,28 @@ ggplot() + geom_point(data = port_betas_ret, aes(x = Beta, y = Ret_acumul)) +
 rm(ibx_ew, dados_fig, i, reg_mod_coef, sml, vetor_betas, port_betas_ret, ret_rf, ret_mercado_rf)
 
 
+
 # Tabela 1 – Resultados dos portfólios de baixa volatilidade ----
+
+## Alteração do Universo: IBX para IBX EW
+indice <- read_csv("Portfolios\\ibx_ew.csv", col_types = "Dn")
 
 ## Painel A
 df_vol_10 <- read_csv("Portfolios\\simple_sort_vol_10.csv", col_types = "Dnnnnnnnnnn")
 df_vol_10$LongShort <- df_vol_10$D1 - df_vol_10$D10
 
-tb1_painel_a <- funcao_painel(df_vol_10[,-1], indice$IBX, nefin$Risk_free)
+tb1_painel_a <- funcao_painel(df_vol_10[,-1], indice$IBX_EW, nefin$Risk_free)
 
 ## Painel B
 tb1_painel_b <- lapply(df_vol_10[,-1], function(x) media_max_perda(x))
 tb1_painel_b <- do.call("cbind", tb1_painel_b)
 
-tb1_painel_b <- data.frame(tb1_painel_b, media_max_perda(indice$IBX))
+tb1_painel_b <- data.frame(tb1_painel_b, media_max_perda(indice$IBX_EW))
 
 colnames(tb1_painel_b) <- c(paste0("D", 1:10), "D1_D10", "Univ")
 
 ## Painel C
-tb1_painel_c <- funcao_painel(dados[,-1], indice$IBX, nefin$Risk_free)
+tb1_painel_c <- funcao_painel(dados[,-1], indice$IBX_EW, nefin$Risk_free)
 
 rm(df_vol_10)
 
@@ -230,13 +232,13 @@ indice_10_21 <- indice %>% dplyr::filter(Data >= "2010-01-01" & Data <= "2021-12
 nefin_10_21 <- nefin %>% dplyr::filter(Data >= "2010-01-01" & Data <= "2021-12-31")
 
 ## Painel A
-tb2_painel_a <- funcao_painel(dados_03_08[,-1], indice_03_08$IBX, nefin_03_08$Risk_free)
+tb2_painel_a <- funcao_painel(dados_03_08[,-1], indice_03_08$IBX_EW, nefin_03_08$Risk_free)
 
 ## Painel B
-tb2_painel_b <- funcao_painel(dados_09[,-1], indice_09$IBX, nefin_09$Risk_free)
+tb2_painel_b <- funcao_painel(dados_09[,-1], indice_09$IBX_EW, nefin_09$Risk_free)
 
 ## Painel C
-tb2_painel_c <- funcao_painel(dados_10_21[,-1], indice_10_21$IBX, nefin_10_21$Risk_free)
+tb2_painel_c <- funcao_painel(dados_10_21[,-1], indice_10_21$IBX_EW, nefin_10_21$Risk_free)
 
 rm(dados_03_08, dados_09, dados_10_21,
    indice_03_08, indice_09, indice_10_21,
@@ -261,25 +263,25 @@ tb3_painel_b <- data.frame(analise_fatores(dados$LowVol, "t", "Menores Vol"),
 df_size <- read_csv("Portfolios\\simple_sort_size_10.csv", col_types = "Dnnnnnnnnnn")
 df_size$LongShort <- df_size$D1 - df_size$D10
 
-tb4_painel_a <- funcao_painel(df_size[,-1], indice$IBX, nefin$Risk_free)
+tb4_painel_a <- funcao_painel(df_size[,-1], indice$IBX_EW, nefin$Risk_free)
 
 ## Painel B
 df_value <- read_csv("Portfolios\\simple_sort_value_10.csv", col_types = "Dnnnnnnnnnn")
 df_value$LongShort <- df_value$D1 - df_value$D10
 
-tb4_painel_b <- funcao_painel(df_value[,-1], indice$IBX, nefin$Risk_free)
+tb4_painel_b <- funcao_painel(df_value[,-1], indice$IBX_EW, nefin$Risk_free)
 
 ## Painel C
 df_mom <- read_csv("Portfolios\\simple_sort_mom_10.csv", col_types = "Dnnnnnnnnnn")
 df_mom$LongShort <- df_mom$D1 - df_mom$D10
 
-tb4_painel_c <- funcao_painel(df_mom[,-1], indice$IBX, nefin$Risk_free)
+tb4_painel_c <- funcao_painel(df_mom[,-1], indice$IBX_EW, nefin$Risk_free)
 
 ## Painel D
 df_quality <- read_csv("Portfolios\\simple_sort_quality_10.csv", col_types = "Dnnnnnnnnnn")
 df_quality$LongShort <- df_quality$D1 - df_quality$D10
 
-tb4_painel_d <- funcao_painel(df_quality[,-1], indice$IBX, nefin$Risk_free)
+tb4_painel_d <- funcao_painel(df_quality[,-1], indice$IBX_EW, nefin$Risk_free)
 
 rm(df_size, df_value, df_mom, df_quality)
 
@@ -290,28 +292,28 @@ rm(df_size, df_value, df_mom, df_quality)
 df_size_vol <- read_csv("Portfolios\\double_sort_size.csv", col_types = "Dnnnnnnnnnn")
 df_size_vol$LongShort <- df_size_vol$D1 - df_size_vol$D10
 
-tb5_painel_a <- funcao_painel(df_size_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_a <- funcao_painel(df_size_vol[,-1], indice$IBX_EW, nefin$Risk_free)
 tb5_painel_a <- tb5_painel_a[ ,-11]
 
 ## Painel B
 df_value_vol <- read_csv("Portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
 df_value_vol$LongShort <- df_value_vol$D1 - df_value_vol$D10
 
-tb5_painel_b <- funcao_painel(df_value_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_b <- funcao_painel(df_value_vol[,-1], indice$IBX_EW, nefin$Risk_free)
 tb5_painel_b <- tb5_painel_b[ ,-11]
 
 ## Painel C
 df_mom_vol <- read_csv("Portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
 df_mom_vol$LongShort <- df_mom_vol$D1 - df_mom_vol$D10
 
-tb5_painel_c <- funcao_painel(df_mom_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_c <- funcao_painel(df_mom_vol[,-1], indice$IBX_EW, nefin$Risk_free)
 tb5_painel_c <- tb5_painel_c[ ,-11]
 
 ## Painel D
 df_quality_vol <- read_csv("Portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
 df_quality_vol$LongShort <- df_quality_vol$D1 - df_quality_vol$D10
 
-tb5_painel_d <- funcao_painel(df_quality_vol[,-1], indice$IBX, nefin$Risk_free)
+tb5_painel_d <- funcao_painel(df_quality_vol[,-1], indice$IBX_EW, nefin$Risk_free)
 tb5_painel_d <- tb5_painel_d[ ,-11]
 
 rm(df_size_vol, df_value_vol, df_mom_vol, df_quality_vol)
@@ -324,7 +326,7 @@ d_size10 <- read_csv("Portfolios\\double_sort_size.csv", col_types = "Dnnnnnnnnn
 
 tb6_painel_a <- as.data.frame(matrix(nrow = (ncol(s_size10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
 for (i in 1:nrow(tb6_painel_a)) {
-  tb6_painel_a[i, 1] <- estat_jkm(d_size10[,i+1, drop = TRUE], s_size10[,i+1, drop = TRUE], indice$IBX, nefin$Risk_free)
+  tb6_painel_a[i, 1] <- estat_jkm(d_size10[,i+1, drop = TRUE], s_size10[,i+1, drop = TRUE], indice$IBX_EW, nefin$Risk_free)
 }
 
 rm(s_size10, d_size10)
@@ -335,7 +337,7 @@ d_value10 <- read_csv("Portfolios\\double_sort_value.csv", col_types = "Dnnnnnnn
 
 tb6_painel_b <- as.data.frame(matrix(nrow = (ncol(s_value10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
 for (i in 1:nrow(tb6_painel_b)) {
-  tb6_painel_b[i, 1] <- estat_jkm(d_value10[,i+1, drop = TRUE], s_value10[,i+1, drop = TRUE], indice$IBX, nefin$Risk_free)
+  tb6_painel_b[i, 1] <- estat_jkm(d_value10[,i+1, drop = TRUE], s_value10[,i+1, drop = TRUE], indice$IBX_EW, nefin$Risk_free)
 }
 
 rm(s_value10, d_value10)
@@ -346,7 +348,7 @@ d_mom10 <- read_csv("Portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn"
 
 tb6_painel_c <- as.data.frame(matrix(nrow = (ncol(s_mom10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
 for (i in 1:nrow(tb6_painel_c)) {
-  tb6_painel_c[i, 1] <- estat_jkm(d_mom10[,i+1, drop = TRUE], s_mom10[,i+1, drop = TRUE], indice$IBX, nefin$Risk_free)
+  tb6_painel_c[i, 1] <- estat_jkm(d_mom10[,i+1, drop = TRUE], s_mom10[,i+1, drop = TRUE], indice$IBX_EW, nefin$Risk_free)
 }
 
 rm(s_mom10, d_mom10)
@@ -357,7 +359,7 @@ d_quality10 <- read_csv("Portfolios\\double_sort_quality.csv", col_types = "Dnnn
 
 tb6_painel_d <- as.data.frame(matrix(nrow = (ncol(s_quality10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
 for (i in 1:nrow(tb6_painel_d)) {
-  tb6_painel_d[i, 1] <- estat_jkm(d_quality10[,i+1, drop = TRUE], s_quality10[,i+1, drop = TRUE], indice$IBX, nefin$Risk_free)
+  tb6_painel_d[i, 1] <- estat_jkm(d_quality10[,i+1, drop = TRUE], s_quality10[,i+1, drop = TRUE], indice$IBX_EW, nefin$Risk_free)
 }
 
 rm(s_quality10, d_quality10)
@@ -369,19 +371,19 @@ rm(s_quality10, d_quality10)
 df_beta_10 <- read_csv("Portfolios\\simple_sort_beta_10.csv", col_types = "Dnnnnnnnnnn")
 df_beta_10$LongShort <- df_beta_10$D1 - df_beta_10$D10
 
-tb7_painel_a <- funcao_painel(df_beta_10[,-1], indice$IBX, nefin$Risk_free)
+tb7_painel_a <- funcao_painel(df_beta_10[,-1], indice$IBX_EW, nefin$Risk_free)
 
 ## Painel B
 tb7_painel_b <- lapply(df_beta_10[,-1], function(x) media_max_perda(x))
 tb7_painel_b <- do.call("cbind", tb7_painel_b)
 
-tb7_painel_b <- data.frame(tb7_painel_b, media_max_perda(indice$IBX))
+tb7_painel_b <- data.frame(tb7_painel_b, media_max_perda(indice$IBX_EW))
 
 colnames(tb7_painel_b) <- c(paste0("D", 1:10), "D1_D10", "Univ")
 
 ## Painel C
-tb7_painel_c <- funcao_painel(dados[,-1], indice$IBX, nefin$Risk_free)
+tb7_painel_c <- funcao_painel(dados[,-1], indice$IBX_EW, nefin$Risk_free)
 
 rm(df_beta_10)
 
-clipr::write_clip(tb6_painel_d)
+clipr::write_clip(tb7_painel_c)
