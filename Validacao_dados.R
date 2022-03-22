@@ -4,6 +4,8 @@ dados_bbg <- read_excel( "C:/Users/Pedro/Desktop/Avantgarde/Paper Luciano\\low v
 # Dados port vol
 dados_pd <- read_csv("Portfolios\\simple_sort_vol_3.csv", col_types = "Dnnn")
 
+apply(dados_pd[,-1], 2, function(x) prod(1 + x) ^ (252 / length(x)) - 1)
+
 dados_pd <- xts(dados_pd[,-1], dados_pd$Data)
 
 dados_pd_mes <- list()
@@ -38,3 +40,6 @@ cor(dados_bbg$MidVol, dados_pd_mes$D2)
 cor(dados_bbg$HighVol, dados_pd_mes$D3)
 cor(dados_bbg$IBX_EW, ibx_ew_mes$IBX_EW)
 
+c(prod(1 + dados_bbg$LowVol)^(12 / length(dados_bbg$LowVol) - 1), prod(1 + dados_pd_mes$D1)^(12 / length(dados_pd_mes$D1) - 1))
+c(prod(1 + dados_bbg$MidVol)^(12 / length(dados_bbg$MidVol) - 1), prod(1 + dados_pd_mes$D2)^(12 / length(dados_pd_mes$D2) - 1))
+c(prod(1 + dados_bbg$HighVol)^(12 / length(dados_bbg$HighVol) - 1), prod(1 + dados_pd_mes$D3)^(12 / length(dados_pd_mes$D3) - 1))

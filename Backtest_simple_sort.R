@@ -89,6 +89,12 @@ ret_port_vol_3 <- simple_sort_3(lista_ativos[[1]][[1]])
 
 colnames(ret_port_vol_3) <- paste0("D", seq(1,3))
 
+## Criamos os portfólios Long Only e Long & Short
+trad_strat <- backtest(lista_ativos[[1]][[1]], 20021231, 20211231, 0.3, "EW")
+colnames(trad_strat) <- c('Long', 'LS')
+
+trad_strat$Short <- trad_strat$Long - trad_strat$LS
+
 # Momentum ----
 
 dbComp <- dbComp_ip
@@ -180,3 +186,23 @@ write.csv(data.frame(Data = index(ret_port_value), ret_port_value), paste0(file_
 write.csv(data.frame(Data = index(ret_port_beta), ret_port_beta), paste0(file_name, "\\simple_sort_beta_10.csv"), row.names = FALSE)
 write.csv(data.frame(Data = index(ret_port_beta_3), ret_port_beta_3), paste0(file_name, "\\simple_sort_beta_3.csv"), row.names = FALSE)
 write.csv(data.frame(Data = index(ibx_ew), ibx_ew), paste0(file_name, "\\ibx_ew.csv"), row.names = FALSE)
+
+## Trading Strategy
+write.csv(data.frame(Data = index(trad_strat), trad_strat), paste0(file_name, "\\raw_trad_strat.csv"), row.names = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

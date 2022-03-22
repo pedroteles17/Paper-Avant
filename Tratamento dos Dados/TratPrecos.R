@@ -7,7 +7,7 @@ library(writexl)
 
 preco_raw <- read_xlsx("Tratamento dos Dados\\PrecoRaw.xlsx", sheet = 2)
   
-preco_raw <- preco_raw[-1:-3, ]
+preco_raw <- preco_raw[-1, ]
 colnames(preco_raw)[1] <- "Data"
 
 preco_raw$Data <- as.Date(as.numeric(preco_raw$Data), origin="1899-12-30")
