@@ -11,7 +11,7 @@ library(kableExtra)
 library(pBrackets)
 library(grid)
 
-nefin <- read_excel("nefin.xlsx", col_types = c("date", rep("numeric", 6))) %>%
+fatores <- read_excel("fatores.xlsx", col_types = c("date", rep("numeric", 6))) %>%
   dplyr::filter(Data >= "2003-01-01" & Data <= "2021-12-31")
 
 indice <- read_csv("Brasil\\indice.csv", col_types = "Dn") %>%
@@ -34,7 +34,7 @@ argumentos <- function(inicio, fim, hold_period, periodo_estim) {
 
 trad_strat$IBX <- indice$IBX
 
-trad_strat$Risk_free <- nefin$Risk_free
+trad_strat$Risk_free <- fatores$Risk_free
 
 datas_beta <- argumentos(20031231, 20211231, 1, 12)
 
@@ -80,7 +80,7 @@ for (i in 1:nrow(datas_beta)) {
   ret_beta_ratio_blume[[i]] <- PerformanceAnalytics::Return.portfolio(trad_strat_aval, c(1, -short_exp_blume[i], short_exp_blume[i]))
 }
 
-rf <- nefin %>% dplyr::filter(Data >= '2004-01-01')
+rf <- fatores %>% dplyr::filter(Data >= '2004-01-01')
 
 ret_beta_ratio <- do.call('rbind.xts', ret_beta_ratio)
 ret_beta_ratio_blume <- do.call('rbind.xts', ret_beta_ratio_blume)
