@@ -46,9 +46,9 @@ for (i in 1:nrow(datas_beta)) {
   
   trad_strat_estim <- trad_strat %>% dplyr::filter(Data > datas[[1]] & Data <= datas[[2]])
   
-  beta_long <- coef(lm(trad_strat_estim$Long ~ trad_strat_estim$IBX))[2]
+  beta_long <- as.numeric(coef(lm(I(trad_strat_estim$Long - trad_strat_estim$Risk_free) ~ I(trad_strat_estim$IBX - trad_strat_estim$Risk_free)))[2])
   
-  beta_short <- coef(lm(trad_strat_estim$Short ~ trad_strat_estim$IBX))[2]
+  beta_short <- as.numeric(coef(lm(I(trad_strat_estim$Short - trad_strat_estim$Risk_free) ~ I(trad_strat_estim$IBX - trad_strat_estim$Risk_free)))[2])
   
   # Calcula a exposicao short 
   short_exp[i] <- beta_long / beta_short
@@ -74,10 +74,10 @@ for (i in 1:nrow(datas_beta)) {
   trad_strat_aval <- xts(trad_strat_aval[,-1], trad_strat_aval$Data)
   
   # Calcula o retorno para o port L&S
-  ret_beta_ratio[[i]] <- PerformanceAnalytics::Return.portfolio(trad_strat_aval, c(-short_exp[i], 1, short_exp[i]))
+  ret_beta_ratio[[i]] <- PerformanceAnalytics::Return.portfolio(trad_strat_aval, c(1, -short_exp[i], short_exp[i]))
   
   # Calcula o retorno para o port L&S usando a metodologia de Blume
-  ret_beta_ratio_blume[[i]] <- PerformanceAnalytics::Return.portfolio(trad_strat_aval, c(-short_exp_blume[i], 1, short_exp_blume[i]))
+  ret_beta_ratio_blume[[i]] <- PerformanceAnalytics::Return.portfolio(trad_strat_aval, c(1, -short_exp_blume[i], short_exp_blume[i]))
 }
 
 rf <- nefin %>% dplyr::filter(Data >= '2004-01-01')
