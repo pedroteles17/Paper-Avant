@@ -49,7 +49,7 @@ retornos <- as.data.frame(lapply(precos_locf, function(x) diff(x)/x[-length(x)])
 retornos <- retornos %>% dplyr::mutate(Data = precos$Data[-1], .before = 1)
 
 # Ajustamos os dados da taxa livre de risco para coincidir com as datas do índice  
-rf <- read_xlsx("Tratamento dos Dados\\Nefin.xlsx") %>% dplyr::select(Data, Risk_free)
+rf <- read_xlsx("Tratamento dos Dados\\CDI.xlsx") %>% dplyr::select(Data, CDI) %>% set_names('Data', 'Risk_free')
 rf$Data <- as.Date(rf$Data)
 rf <- rf[order(rf$Data), ]
 rf$Risk_free <- cumprod(1 + rf$Risk_free)
