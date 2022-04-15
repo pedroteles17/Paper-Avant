@@ -70,10 +70,10 @@ estat_ret <- function(ret_port, ind, rf) {
   )) 
   
   rownames(resultados) <- c(
-    "Retorno Anualizado (%)",
-    "Sigma (%)", "IS", "t(IS)",
-    "Rp-Rf Anualizado (%)",
-    "Beta", "Alfa (%)", "t(alfa)"
+    "Annualized Return (%)",
+    "Standard Deviation (%)", "Sharpe Ratio", "z(SR)",
+    "Annualized Rp-Rf (%)",
+    "Beta", "Alpha (%)", "t(alpha)"
   )
   
   resultados[c(1, 2, 5, 7), 1] <- round(resultados[c(1, 2, 5, 7), 1]*100, 2)
@@ -92,7 +92,7 @@ media_max_perda <- function(ret, nome_col){
     maior_perda
   ))
   
-  rownames(media_max) <-c("Media das alturas", "Media das baixas", "Maior perda observada")
+  rownames(media_max) <-c("Average positive returns (%)", "Average negative returns (%)", "Biggest loss - day (%)")
   
   media_max <- round(media_max, 2)
 }
@@ -116,7 +116,7 @@ analise_fatores <- function(retornos, tipo, nome_col){
     
     result <- round(((result + 1) ^ 252 - 1)*100, 2)
     
-    rownames(result) <- c("CAPM", "3 Fatores", "4 Fatores", "5 Fatores") 
+    rownames(result) <- c("CAPM", "F&F", "Cahart", "5 Factors") 
     
     return(result)
   } else if(tipo == "t"){
@@ -264,14 +264,14 @@ rm(dados_03_08, dados_09, dados_10_21,
 # Tabela 3 – Regressão nos modelos multi-fatoriais ----
 
 ## Painel A
-tb3_painel_a <- data.frame(analise_fatores(dados$LowVol, "Alfa", "Menores Vol"),
-                           analise_fatores(dados$MidVol, "Alfa", "Intermediaria"),
-                           analise_fatores(dados$HighVol, "Alfa", "Maiores Vol"))
+tb3_painel_a <- data.frame(analise_fatores(dados$LowVol, "Alfa", "Low Vol."),
+                           analise_fatores(dados$MidVol, "Alfa", "Mid Vol."),
+                           analise_fatores(dados$HighVol, "Alfa", "High Vol."))
 
 ## Painel B
-tb3_painel_b <- data.frame(analise_fatores(dados$LowVol, "t", "Menores Vol"),
-                           analise_fatores(dados$MidVol, "t", "Intermediaria"),
-                           analise_fatores(dados$HighVol, "t", "Maiores Vol"))
+tb3_painel_b <- data.frame(analise_fatores(dados$LowVol, "t", "Low Vol."),
+                           analise_fatores(dados$MidVol, "t", "Mid Vol."),
+                           analise_fatores(dados$HighVol, "t", "High Vol."))
 
 # Tabela 4 -  Resultados dos portfólios formados com outros fatores ----
 
@@ -411,7 +411,7 @@ trad_strat <- read_csv("Portfolios\\trad_strat.csv", col_types = "Dnnn")
 trad_strat$BetaPuro <- trad_strat$BetaPuro + trad_strat$RiskFree
 trad_strat$BetaBlume <- trad_strat$BetaBlume + trad_strat$RiskFree
 
-## Figura 
+## Figura 8
 trad_strat_acumul <- apply(trad_strat[,-1], 2, function(x) cumprod(1 + x) - 1)
 trad_strat_acumul <- data.frame(Data = trad_strat$Data, trad_strat_acumul)
 
@@ -426,7 +426,7 @@ indice_tb8 <- indice %>% dplyr::filter(Data > '2003-12-31')
 rf_tb8 <- fatores %>% dplyr::filter(Data > '2003-12-31') %>% select(Data, Risk_free)
 
 estat_beta <- data.frame(estat_ret(trad_strat$BetaPuro, indice_tb8$IBX, rf_tb8$Risk_free),
-                         estat_ret(trad_strat$BetaBlume, indice_tb8$IBX, rf_tb8$Risk_free)) %>% set_names('Beta Puro', 'Beta Blume')
+                         estat_ret(trad_strat$BetaBlume, indice_tb8$IBX, rf_tb8$Risk_free)) %>% set_names('Pure Beta', 'Beta Blume')
 
 trad_strat_xts <- xts(trad_strat[,-1], trad_strat$Data)
 
