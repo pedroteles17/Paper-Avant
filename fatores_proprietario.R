@@ -114,21 +114,10 @@ port_geral <- data.frame(Data = index(port_geral), port_geral)
 
 # Fusao CDI e IBX-CDI ----
 
-cdi <- read_excel('CDI.xlsx') %>% dplyr::select(-1)
-cdi$Data <- as.Date(cdi$Data)
-
-indice <- dbRet_ind %>% dplyr::filter(Data > '1999-12-31', Data <= '2021-12-31')
-
-cdi_ind <- merge(indice, cdi, all.x = TRUE, by = 'Data')
-
-# Calculate returns
-cdi_ind$CDI <- append(NA, diff(cdi_ind$CDI)/cdi_ind$CDI[-length(cdi_ind$CDI)])
-
-# First line is NA
-cdi_ind <- cdi_ind[-1,]
+cdi_ind <- merge(dbRet_ind, dbRisk_free, all.x = TRUE, by = 'Data')
 
 # Market return above risk free rate
-cdi_ind$Rm_rf <- cdi_ind$`IBX Index` - cdi_ind$CDI
+cdi_ind$Rm_rf <- cdi_ind$`IBX Index` - cdi_ind$Risk_free
 
 cdi_ind <- cdi_ind %>% dplyr::select(!`IBX Index`)
 

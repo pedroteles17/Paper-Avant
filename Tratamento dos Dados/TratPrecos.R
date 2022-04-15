@@ -52,7 +52,6 @@ retornos <- retornos %>% dplyr::mutate(Data = precos$Data[-1], .before = 1)
 rf <- read_xlsx("Tratamento dos Dados\\CDI.xlsx") %>% dplyr::select(Data, CDI) %>% set_names('Data', 'Risk_free')
 rf$Data <- as.Date(rf$Data)
 rf <- rf[order(rf$Data), ]
-rf$Risk_free <- cumprod(1 + rf$Risk_free)
   
 rf1 <- merge(ind[,1], rf, by = "Data", all.x = TRUE)
 rf1$Risk_free <- na.locf(rf1$Risk_free)
