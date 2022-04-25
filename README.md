@@ -35,7 +35,7 @@
 
 # Data Availability Statement
 
-All the Excel files used to suport the findings of this study have been deposited in the "Cleaning Data" folder.
+All the Excel files used to suport the findings of this study have been deposited in the "raw_data" folder.
 
 # Computational Requirements
 
