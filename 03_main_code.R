@@ -217,12 +217,12 @@ data$LongShort <- long_short$portfolio.returns
 rm(data_xts, long_short)
 
 # Import the index returns
-index <- read_csv("Brazil\\index_returns.csv", col_types = "Dn") %>%
+index <- read_csv("brazil\\index_returns.csv", col_types = "Dn") %>%
   dplyr::filter(Date >= "2003-01-01" & Date <= "2021-12-31") %>% 
   set_names(c("Date", "IBX"))
 
 # Import the risk free returns
-rf <- read_csv("Brazil\\risk_free_returns.csv", col_types = "Dn") %>%
+rf <- read_csv("brazil\\risk_free_returns.csv", col_types = "Dn") %>%
   dplyr::filter(Date >= "2003-01-01" & Date <= "2021-12-31") %>% 
   set_names(c("Date", "Risk_free"))
 

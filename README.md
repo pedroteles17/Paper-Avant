@@ -67,4 +67,3 @@ The code should be run in the folowing order:
 3- backtests.R;
 
 4- main_code.R.
-

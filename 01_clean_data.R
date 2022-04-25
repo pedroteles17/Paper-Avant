@@ -19,7 +19,7 @@
 ###########################################################################
 
 ## Import the index composition data extracted from Bloomberg
-comp_raw <- read_xlsx("Data Cleaning\\index_comp_raw.xlsx", sheet = 1)
+comp_raw <- read_xlsx("raw_data\\index_comp_raw.xlsx", sheet = 1)
 
 ## The odd columns have the Bloomberg Ticker; the even columns have the company name.
 ### We want only the Bloomberg Ticker
@@ -67,7 +67,7 @@ rm(comp_raw, comp, new_df, dates, i, odd)
 #################################################################
 
 ## Import the data extracted from Bloomberg
-price_raw <- read_xlsx("Data Cleaning\\price_raw.xlsx", sheet = 2)
+price_raw <- read_xlsx("raw_data\\price_raw.xlsx", sheet = 2)
 
 ## The first row carries no information
 price_raw <- price_raw[-1, ]
@@ -88,7 +88,7 @@ price_raw <- data.frame(Data = price_raw$Date, sapply(price_raw[, -1], as.numeri
 #################################################################
 
 ## Repeat the process used for the asset prices to the index prices
-ind <- read_xlsx("Data Cleaning\\price_raw.xlsx", sheet = 3)
+ind <- read_xlsx("raw_data\\price_raw.xlsx", sheet = 3)
 ind <- ind[-1:-3, ]
 colnames(ind)[1] <- "Date"
 ind$Date <- as.Date(as.numeric(ind$Date), origin = "1899-12-30")
@@ -104,7 +104,7 @@ ind <- ind %>%
 
 ## The risk free data was extracted using the Brazilian Central Bank API
 
-rf <- read_xlsx("Data Cleaning\\cdi_raw.xlsx") %>%
+rf <- read_xlsx("raw_data\\cdi_raw.xlsx") %>%
   dplyr::select(Date, cdi) %>%
   set_names("Date", "Risk_free")
 
@@ -172,7 +172,7 @@ indic_name <- c("value", "quality", "size")
 indic_data <- vector("list", length = length(indic_name))
 # Clean the financial indicators data
 for (i in seq_along(indic_name)) {
-  indic <- read_excel("Data Cleaning\\indicators_raw.xlsx", sheet = i + 1)
+  indic <- read_excel("raw_data\\indicators_raw.xlsx", sheet = i + 1)
 
   colnames(indic)[1] <- "Date"
   indic <- indic[-1, ]
@@ -201,9 +201,9 @@ for (i in seq_along(indic_name)) {
 ###########################################################################
 ###########################################################################
 
-folder_name <- paste0(getwd(), "/Brazil")
+folder_name <- paste0(getwd(), "/brazil")
 
-# If you need to create the folder ('/Brazil'), uncomment the line below
+# If you need to create the folder ('/brazil'), uncomment the line below
 dir.create(folder_name)
 
 

@@ -40,7 +40,7 @@ plan(multisession, workers = parallel::detectCores())
 source("99_functions.R")
 
 # Where are the cleaned data stored?
-path2file <- paste(getwd(), "Brazil", sep = "/")
+path2file <- paste(getwd(), "brazil", sep = "/")
 
 # Import index composition
 ## We need to eliminate "RIPI4 BS Equity" because of a data quality issue:
