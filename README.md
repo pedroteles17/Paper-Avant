@@ -60,10 +60,10 @@ The xlsx package loads the rJava package. This package requires Java to be insta
 
 The code should be run in the folowing order:
 
-1- o_setup.R;
+1- 00_setup.R;
 
-2- clean_data.R;
+2- 01_clean_data.R;
 
-3- backtests.R;
+3- 02_backtests.R;
 
-4- main_code.R.
+4- 03_main_code.R.
