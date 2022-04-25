@@ -18,6 +18,7 @@
 ###########################################################################
 ###########################################################################
 
+## Pass a data frame containing the date, the long and the short returns
 calculate_long_short <- function(ret){
   # Calculate the Long e Short portfolio returns
   data_xts <- xts(ret[,-1], ret$Date)
@@ -205,7 +206,7 @@ factor_analysis <- function(ret, type, col_name){
 
 
 # Import the base portfolio: Low Vol factor 3 portfolios
-data <- read_csv("Portfolios\\simple_sort_vol_3.csv", col_types = "Dnnn") %>% 
+data <- read_csv("portfolios\\simple_sort_vol_3.csv", col_types = "Dnnn") %>% 
   set_names(c("Date", "LowVol", "MidVol", "HighVol"))
 
 # Calculate the Long e Short portfolio returns
@@ -227,7 +228,7 @@ rf <- read_csv("brazil\\risk_free_returns.csv", col_types = "Dn") %>%
   set_names(c("Date", "Risk_free"))
 
 # Import the proprietary factor returns and add the market factor, the risk free and the index returns
-factors <- read_csv("Portfolios\\proprietary_factors.csv") %>%
+factors <- read_csv("portfolios\\proprietary_factors.csv") %>%
   dplyr::filter(Date >= "2003-01-01" & Date <= "2021-12-31") %>%
   mutate(Risk_free = rf$Risk_free, IBX = index$IBX, Rm_minus_Rf = index$IBX - rf$Risk_free)
 
@@ -250,7 +251,7 @@ factors <- read_csv("Portfolios\\proprietary_factors.csv") %>%
 data_fig <- data.frame(data[,c(-1, -ncol(data))], IBX = index$IBX)
 
 ## Download the returns of the 10 portfolios sorted on volatility
-data_fig <- read_csv("Portfolios\\simple_sort_vol_10.csv", col_types = "Dnnnnnnnnnn") %>%
+data_fig <- read_csv("portfolios\\simple_sort_vol_3.csv", col_types = "Dnnnnnnnnnn") %>%
   mutate(IBX = index$IBX) %>% dplyr::select(-1)
 
 ## Add each portfolio's beta to a vector
@@ -297,26 +298,17 @@ rm(data_fig, i, reg_mod_coef, sml, beta_vector, port_betas_ret, ret_rf, ret_inde
 # Low volatility portfolios results
 
 ## Panel A
-df_vol_10 <- read_csv("Portfolios\\simple_sort_vol_10.csv", col_types = "Dnnnnnnnnnn")
-df_vol_10$LongShort <- calculate_long_short(df_vol_10[,c(1, 2, 11)])
+df_vol_3 <- read_csv("portfolios\\simple_sort_vol_3.csv", col_types = "Dnnnnnnnnnn")
+df_vol_3$LongShort <- calculate_long_short(df_vol_3[,c(1, 2, ncol(df_vol_3))])
 
-tb1_panel_a <- panel_function(df_vol_10[,-1], index$IBX, factors$Risk_free)
+tb1_panel_a <- panel_function(df_vol_3[,-1], index$IBX, factors$Risk_free)
 
 ## Panel B
-tb1_panel_b <- lapply(df_vol_10[,-1], function(x) avg_max_loss(x))
+tb1_panel_b <- lapply(df_vol_3[,-1], function(x) avg_max_loss(x))
 tb1_panel_b <- do.call("cbind", tb1_panel_b)
-tb1_panel_b <- data.frame(tb1_panel_b, avg_max_loss(index$IBX)) %>% set_names(c(paste0("D", 1:10), "D1-D10", "IBX"))
+tb1_panel_b <- data.frame(tb1_panel_b, avg_max_loss(index$IBX)) %>% set_names(c(paste0("D", 1:3), "D1-D3", "IBX"))
 
-## Panel C
-tb1_panel_c <- panel_function(data[,-1], index$IBX, factors$Risk_free)
-
-## Panel D
-tb1_panel_d <- lapply(data[,c(-1, -5), drop = FALSE], function(x) avg_max_loss(x))
-tb1_panel_d <- do.call("cbind", tb1_panel_d)
-
-tb1_panel_d <- data.frame(tb1_panel_d, avg_max_loss(index$IBX)) %>% set_names(c(paste0("D", 1:3), "IBX"))
-
-rm(df_vol_10)
+rm(df_vol_3)
 
 #################################################################
 ##                           Table 2                           ##
@@ -372,25 +364,25 @@ tb3_panel_b <- data.frame(factor_analysis(data$LowVol, "t", "Low Vol."),
 # Other factors portfolios results
 
 ## Panel A
-df_size <- read_csv("Portfolios\\simple_sort_size_10.csv", col_types = "Dnnnnnnnnnn")
+df_size <- read_csv("portfolios\\simple_sort_size_10.csv", col_types = "Dnnnnnnnnnn")
 df_size$LongShort <- calculate_long_short(df_size[,c(1, 2, 11)])
 
 tb4_panel_a <- panel_function(df_size[,-1], index$IBX, factors$Risk_free)
 
 ## Panel B
-df_value <- read_csv("Portfolios\\simple_sort_value_10.csv", col_types = "Dnnnnnnnnnn")
+df_value <- read_csv("portfolios\\simple_sort_value_10.csv", col_types = "Dnnnnnnnnnn")
 df_value$LongShort <- calculate_long_short(df_value[,c(1, 2, 11)])
 
 tb4_panel_b <- panel_function(df_value[,-1], index$IBX, factors$Risk_free)
 
 ## Panel C
-df_mom <- read_csv("Portfolios\\simple_sort_mom_10.csv", col_types = "Dnnnnnnnnnn")
+df_mom <- read_csv("portfolios\\simple_sort_mom_10.csv", col_types = "Dnnnnnnnnnn")
 df_mom$LongShort <- calculate_long_short(df_mom[,c(1, 2, 11)])
 
 tb4_panel_c <- panel_function(df_mom[,-1], index$IBX, factors$Risk_free)
 
 ## Panel D
-df_quality <- read_csv("Portfolios\\simple_sort_quality_10.csv", col_types = "Dnnnnnnnnnn")
+df_quality <- read_csv("portfolios\\simple_sort_quality_10.csv", col_types = "Dnnnnnnnnnn")
 df_quality$LongShort <- calculate_long_short(df_quality[,c(1, 2, 11)])
 
 tb4_panel_d <- panel_function(df_quality[,-1], index$IBX, factors$Risk_free)
@@ -404,25 +396,25 @@ rm(df_size, df_value, df_mom, df_quality)
 # Double sorted portfolios results
 
 ## Panel A
-df_size_vol <- read_csv("Portfolios\\double_sort_size.csv", col_types = "Dnnnnnnnnnn")
+df_size_vol <- read_csv("portfolios\\double_sort_size.csv", col_types = "Dnnnnnnnnnn")
 df_size_vol$LongShort <- calculate_long_short(df_size_vol[,c(1, 2, 11)])
 
 tb5_panel_a <- panel_function(df_size_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
 ## Panel B
-df_value_vol <- read_csv("Portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
+df_value_vol <- read_csv("portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
 df_value_vol$LongShort <- calculate_long_short(df_value_vol[,c(1, 2, 11)])
 
 tb5_panel_b <- panel_function(df_value_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
 ## Panel C
-df_mom_vol <- read_csv("Portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
+df_mom_vol <- read_csv("portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
 df_mom_vol$LongShort <- calculate_long_short(df_mom_vol[,c(1, 2, 11)])
 
 tb5_panel_c <- panel_function(df_mom_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
 ## Panel D
-df_quality_vol <- read_csv("Portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
+df_quality_vol <- read_csv("portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
 df_quality_vol$LongShort <- calculate_long_short(df_quality_vol[,c(1, 2, 11)])
 
 tb5_panel_d <- panel_function(df_quality_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
@@ -436,8 +428,8 @@ rm(df_size_vol, df_value_vol, df_mom_vol, df_quality_vol)
 # t-value comparison between Sharpe Ratios
 
 ## Panel A
-s_size10 <- read_csv("Portfolios\\simple_sort_size_10.csv", col_types = "Dnnnnnnnnnn")
-d_size10 <- read_csv("Portfolios\\double_sort_size.csv", col_types = "Dnnnnnnnnnn")
+s_size10 <- read_csv("portfolios\\simple_sort_size_10.csv", col_types = "Dnnnnnnnnnn")
+d_size10 <- read_csv("portfolios\\double_sort_size.csv", col_types = "Dnnnnnnnnnn")
 
 tb6_panel_a <- as.data.frame(matrix(nrow = (ncol(s_size10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
 for (i in 1:nrow(tb6_panel_a)) {
@@ -447,8 +439,8 @@ for (i in 1:nrow(tb6_panel_a)) {
 rm(s_size10, d_size10)
 
 ## Panel B
-s_value10 <- read_csv("Portfolios\\simple_sort_value_10.csv", col_types = "Dnnnnnnnnnn")
-d_value10 <- read_csv("Portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
+s_value10 <- read_csv("portfolios\\simple_sort_value_10.csv", col_types = "Dnnnnnnnnnn")
+d_value10 <- read_csv("portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
 
 tb6_panel_b <- as.data.frame(matrix(nrow = (ncol(s_value10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
 for (i in 1:nrow(tb6_panel_b)) {
@@ -458,8 +450,8 @@ for (i in 1:nrow(tb6_panel_b)) {
 rm(s_value10, d_value10)
 
 ## Panel C
-s_mom10 <- read_csv("Portfolios\\simple_sort_mom_10.csv", col_types = "Dnnnnnnnnnn")
-d_mom10 <- read_csv("Portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
+s_mom10 <- read_csv("portfolios\\simple_sort_mom_10.csv", col_types = "Dnnnnnnnnnn")
+d_mom10 <- read_csv("portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
 
 tb6_panel_c <- as.data.frame(matrix(nrow = (ncol(s_mom10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
 for (i in 1:nrow(tb6_panel_c)) {
@@ -469,8 +461,8 @@ for (i in 1:nrow(tb6_panel_c)) {
 rm(s_mom10, d_mom10)
 
 ## Panel D
-s_quality10 <- read_csv("Portfolios\\simple_sort_quality_10.csv", col_types = "Dnnnnnnnnnn")
-d_quality10 <- read_csv("Portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
+s_quality10 <- read_csv("portfolios\\simple_sort_quality_10.csv", col_types = "Dnnnnnnnnnn")
+d_quality10 <- read_csv("portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
 
 tb6_panel_d <- as.data.frame(matrix(nrow = (ncol(s_quality10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
 for (i in 1:nrow(tb6_panel_d)) {
@@ -485,14 +477,14 @@ rm(s_quality10, d_quality10, i)
 
 # Trading Strategy Figure
 
-trad_strat <- read_csv("Portfolios\\trad_strat.csv", col_types = "Dnnn")
+trad_strat <- read_csv("portfolios\\trad_strat.csv", col_types = "Dnnn")
 
 index_tb7 <- index %>% dplyr::filter(Date > '2003-12-31')
 rf_tb7 <- rf %>% dplyr::filter(Date > '2003-12-31')
 
 ## Figure 2
 trad_strat_acumul <- apply(trad_strat[,-1], 2, function(x) cumprod(1 + x) - 1)
-trad_strat_acumul <- data.frame(Date = trad_strat$Date, trad_strat_acumul, Risk_free = rf_tb7$Risk_free)
+trad_strat_acumul <- data.frame(Date = trad_strat$Date, trad_strat_acumul, Risk_free = cumprod(1 + rf_tb7$Risk_free))
 
 # create a png plot
 png("fig2.png", height=1600, width=2400, res=250, pointsize=8)
@@ -610,8 +602,8 @@ addPicture("fig1.png", sheet, scale = 1, startRow = 3,
 # Remove the plot from the disk
 res<-file.remove("fig1.png")
 
-list_dfs <- list(tb1_panel_a, tb1_panel_b, tb1_panel_c, tb1_panel_d)
-title_vector <- c('Panel A', 'Panel B', 'Panel C', 'Panel D')
+list_dfs <- list(tb1_panel_a, tb1_panel_b)
+title_vector <- c('Panel A', 'Panel B')
 add_excel_sheet('T1', list_dfs, title_vector)
 
 list_dfs <- list(tb2_panel_a, tb2_panel_b, tb2_panel_c)

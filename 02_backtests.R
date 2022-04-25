@@ -9,6 +9,8 @@
 
 # code author: Pedro Teles (pteles@avantgardeam.com.br)
 
+"%ni%" <- Negate("%in%")
+
 ###########################################################################
 ###########################################################################
 ###                                                                     ###
@@ -180,8 +182,8 @@ trad_strat <- trad_strat %>% dplyr::select(Date, D1, D3) %>% set_names('Date', '
 ##                        Ten Portfolios                        ##
 ##################################################################
 
-ordered_factor <- list(ord_indic_size, ord_indic_value, ord_indic_mom, ord_indic_quality, ord_indic_vol)
-names(ordered_factor) <- c('SMB', 'HML', 'WML', 'QMJ', 'RMS') # RMS: Risky Minus Safe
+ordered_factor <- list(ord_indic_size, ord_indic_value, ord_indic_mom, ord_indic_quality)
+names(ordered_factor) <- c('SMB', 'HML', 'WML', 'QMJ') # RMS: Risky Minus Safe
 
 port_factor_10 <- vector('list', length = length(ordered_factor))
 for (i in seq_along(ordered_factor)) {
@@ -192,7 +194,7 @@ for (i in seq_along(ordered_factor)) {
 }
 
 # RMS: Risky Minus Safe (Low Volaitility)
-names(port_factor_10) <- c('SMB', 'HML', 'WML', 'QMJ', 'RMS')
+names(port_factor_10) <- c('SMB', 'HML', 'WML', 'QMJ')
 
 rm(ordered_factor)
 
@@ -307,7 +309,7 @@ rm(index, rf, dates_beta, dates, trad_strat_estim, beta_long, beta_short, short_
 ###########################################################################
 ###########################################################################
 
-file_name <- paste0(getwd(), '/Portfolios')
+file_name <- paste0(getwd(), '/portfolios')
 
 # Comment if you already have this directory
 dir.create(file_name)
@@ -324,7 +326,6 @@ write.csv(xts2df(port_factor_10[['SMB']]), paste0(file_name, "\\simple_sort_size
 write.csv(xts2df(port_factor_10[['HML']]), paste0(file_name, "\\simple_sort_value_10.csv"), row.names = FALSE)
 write.csv(xts2df(port_factor_10[['WML']]), paste0(file_name, "\\simple_sort_mom_10.csv"), row.names = FALSE)
 write.csv(xts2df(port_factor_10[['QMJ']]), paste0(file_name, "\\simple_sort_quality_10.csv"), row.names = FALSE)
-write.csv(xts2df(port_factor_10[['RMS']]), paste0(file_name, "\\simple_sort_vol_10.csv"), row.names = FALSE)
 
 # Double Sorting
 write.csv(xts2df(port_double_sort[['SMB']]), paste0(file_name, "\\double_sort_size.csv"), row.names = FALSE)
