@@ -82,6 +82,8 @@ stat_ret <- function(ret_port, ind, rf) {
   
   port_excess_ret <- ret_period(ret_port - rf)
   
+  # Update the Sharpe Ratio so its annualized
+  SR <- port_excess_ret / vol
   
   results <- data.frame(c(
     cumulative_ret, vol, SR, t_SR,
@@ -111,7 +113,14 @@ panel_function <- function(df_ret, ind, rf){
   panel <-  lapply(df_panel, function(x) stat_ret(x, ind, rf))
   panel <- do.call("cbind", panel) 
   n_ports <- ncol(panel)-2
-  colnames(panel) <- c(paste0("D", 1:n_ports), paste0('D1-D', n_ports), "IBX")
+  
+  if(n_ports == 10){
+    nom <- "D"
+  } else {
+    nom <- "P"
+  }
+  
+  colnames(panel) <- c(paste0(nom, 1:n_ports), paste0(nom, '1-', nom, n_ports), "IBX")
   
   # Some statistics don't apply to all portfolios (beta for the market index returns, e.g.)
   panel[c(3, 4), (ncol(panel)-1)] <- NA
@@ -306,7 +315,7 @@ tb1_panel_a <- panel_function(df_vol_3[,-1], index$IBX, factors$Risk_free)
 ## Panel B
 tb1_panel_b <- lapply(df_vol_3[,-1], function(x) avg_max_loss(x))
 tb1_panel_b <- do.call("cbind", tb1_panel_b)
-tb1_panel_b <- data.frame(tb1_panel_b, avg_max_loss(index$IBX)) %>% set_names(c(paste0("D", 1:3), "D1-D3", "IBX"))
+tb1_panel_b <- data.frame(tb1_panel_b, avg_max_loss(index$IBX)) %>% set_names(c(paste0("P", 1:3), "P1-P3", "IBX"))
 
 rm(df_vol_3)
 

@@ -83,7 +83,7 @@ ord_indic_vol <- future_map(1:nrow(backtest_dates), get_ord_indic,
 # Momentum
 ord_indic_mom <- future_map(1:nrow(backtest_dates), get_ord_indic,
                            start_date = 20021231, end_date = 20211231,
-                           hold_period = c(1), estim_period = c(12),
+                           hold_period = c(1), estim_period = c(6),
                            fin_indic = ret_assets, comp_matrix = comp,
                            factor_name = 'Momentum', order = 'descending')
 
