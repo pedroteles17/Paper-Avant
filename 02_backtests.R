@@ -112,16 +112,16 @@ ord_indic_size <- future_map(1:nrow(backtest_dates), get_ord_indic,
                             fin_indic = size, comp_matrix = comp_size,
                             factor_name = 'Size', order = 'ascending')
 
-# Quality
-quality <- base_indic(paste0(path2file, '\\quality.csv'))
+# profitability
+profit <- base_indic(paste0(path2file, '\\profitability.csv'))
 
-ord_indic_quality <- future_map(1:nrow(backtest_dates), get_ord_indic,
+ord_indic_profit <- future_map(1:nrow(backtest_dates), get_ord_indic,
                             start_date = 20021231, end_date = 20211231,
                             hold_period = c(1), estim_period = c(0),
-                            fin_indic = quality, comp_matrix = comp,
-                            factor_name = 'Quality', order = 'descending')
+                            fin_indic = profit, comp_matrix = comp,
+                            factor_name = 'Profitability', order = 'descending')
 
-rm(value, size, diff_size_comp, comp_size, quality)
+rm(value, size, diff_size_comp, comp_size, profit)
 
 ###########################################################################
 ###########################################################################
@@ -139,8 +139,8 @@ rm(value, size, diff_size_comp, comp_size, quality)
 # Here we will build the proprietary factors that are going to be used for
 ## the factor regressions.
 
-ordered_regres <- list(ord_indic_size, ord_indic_value, ord_indic_mom, ord_indic_quality)
-names(ordered_regres) <- c('Size', 'Value', 'Momentum', 'Quality')
+ordered_regres <- list(ord_indic_size, ord_indic_value, ord_indic_mom, ord_indic_profit)
+names(ordered_regres) <- c('Size', 'Value', 'Momentum', 'Profit')
 
 port_regres <- vector('list', length = length(ordered_regres))
 for (i in seq_along(ordered_regres)) {
@@ -157,7 +157,7 @@ for (i in seq_along(ordered_regres)) {
 
 port_regres <- do.call('cbind.xts', port_regres)
 
-colnames(port_regres) <- c('SMB', 'HML', 'WML', 'QMJ')
+colnames(port_regres) <- c('SMB', 'HML', 'WML', 'PMU')
 
 rm(ordered_regres, percent)
 
@@ -182,8 +182,8 @@ trad_strat <- trad_strat %>% dplyr::select(Date, D1, D3) %>% set_names('Date', '
 ##                        Ten Portfolios                        ##
 ##################################################################
 
-ordered_factor <- list(ord_indic_size, ord_indic_value, ord_indic_mom, ord_indic_quality)
-names(ordered_factor) <- c('SMB', 'HML', 'WML', 'QMJ') # RMS: Risky Minus Safe
+ordered_factor <- list(ord_indic_size, ord_indic_value, ord_indic_mom, ord_indic_profit)
+names(ordered_factor) <- c('SMB', 'HML', 'WML', 'PMU') # RMS: Risky Minus Safe
 
 port_factor_10 <- vector('list', length = length(ordered_factor))
 for (i in seq_along(ordered_factor)) {
@@ -194,7 +194,7 @@ for (i in seq_along(ordered_factor)) {
 }
 
 # RMS: Risky Minus Safe (Low Volaitility)
-names(port_factor_10) <- c('SMB', 'HML', 'WML', 'QMJ')
+names(port_factor_10) <- c('SMB', 'HML', 'WML', 'PMU')
 
 rm(ordered_factor)
 
@@ -203,10 +203,10 @@ rm(ordered_factor)
 ##################################################################
 
 ## Here we first sort the assets based on one of the four factors
-### 'SMB', 'HML', 'WML', 'QMJ' and then sort based on low volatility
+### 'SMB', 'HML', 'WML', 'PMU' and then sort based on low volatility
 
-ord_fact_double <- list(ord_indic_size, ord_indic_value, ord_indic_mom, ord_indic_quality)
-names(ord_fact_double) <- c('SMB', 'HML', 'WML', 'QMJ') 
+ord_fact_double <- list(ord_indic_size, ord_indic_value, ord_indic_mom, ord_indic_profit)
+names(ord_fact_double) <- c('SMB', 'HML', 'WML', 'PMU') 
 
 port_double_sort <- vector('list', length = length(ord_fact_double))
 for (i in seq_along(ord_fact_double)) {
@@ -223,7 +223,7 @@ for (i in seq_along(ord_fact_double)) {
   colnames(port_double_sort[[i]]) <- paste0("D", seq(1,10))
 }
 
-names(port_double_sort) <- c('SMB', 'HML', 'WML', 'QMJ')
+names(port_double_sort) <- c('SMB', 'HML', 'WML', 'PMU')
 
 ############################################################################
 ############################################################################
@@ -325,13 +325,13 @@ write.csv(xts2df(trad_strat), paste0(file_name, "\\trad_strat.csv"), row.names =
 write.csv(xts2df(port_factor_10[['SMB']]), paste0(file_name, "\\simple_sort_size_10.csv"), row.names = FALSE)
 write.csv(xts2df(port_factor_10[['HML']]), paste0(file_name, "\\simple_sort_value_10.csv"), row.names = FALSE)
 write.csv(xts2df(port_factor_10[['WML']]), paste0(file_name, "\\simple_sort_mom_10.csv"), row.names = FALSE)
-write.csv(xts2df(port_factor_10[['QMJ']]), paste0(file_name, "\\simple_sort_quality_10.csv"), row.names = FALSE)
+write.csv(xts2df(port_factor_10[['PMU']]), paste0(file_name, "\\simple_sort_profitability_10.csv"), row.names = FALSE)
 
 # Double Sorting
 write.csv(xts2df(port_double_sort[['SMB']]), paste0(file_name, "\\double_sort_size.csv"), row.names = FALSE)
 write.csv(xts2df(port_double_sort[['HML']]), paste0(file_name, "\\double_sort_value.csv"), row.names = FALSE)
 write.csv(xts2df(port_double_sort[['WML']]), paste0(file_name, "\\double_sort_mom.csv"), row.names = FALSE)
-write.csv(xts2df(port_double_sort[['QMJ']]), paste0(file_name, "\\double_sort_quality.csv"), row.names = FALSE)
+write.csv(xts2df(port_double_sort[['PMU']]), paste0(file_name, "\\double_sort_profitability.csv"), row.names = FALSE)
 
 # Trading Strategy
 write.csv(xts2df(ret_ports_trad_strat), paste0(file_name, "\\trad_strat.csv"), row.names = FALSE)

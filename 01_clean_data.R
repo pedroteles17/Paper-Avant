@@ -165,9 +165,9 @@ ind <- ind[-1, ]
 ###########################################################################
 ###########################################################################
 
-## We have Price to Book (value), Gross Profit to Total Assets (quality) and
+## We have Price to Book (value), Gross Profit to Total Assets (profitability) and
 ## Market Capitalization (size) data for the assets.
-indic_name <- c("value", "quality", "size")
+indic_name <- c("value", "profitability", "size")
 
 indic_data <- vector("list", length = length(indic_name))
 # Clean the financial indicators data
@@ -214,7 +214,7 @@ write.csv(returns, paste0(folder_name, "\\asset_returns.csv"), row.names = FALSE
 write.csv(ind, paste0(folder_name, "\\index_returns.csv"), row.names = FALSE)
 
 write.csv(indic_data[[1]], paste0(folder_name, "\\value.csv"), row.names = FALSE)
-write.csv(indic_data[[2]], paste0(folder_name, "\\quality.csv"), row.names = FALSE)
+write.csv(indic_data[[2]], paste0(folder_name, "\\profitability.csv"), row.names = FALSE)
 write.csv(indic_data[[3]], paste0(folder_name, "\\size.csv"), row.names = FALSE)
 
 # Clean all variables so we can run the next code (backtests.R)

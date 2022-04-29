@@ -174,8 +174,8 @@ factor_analysis <- function(ret, type, col_name){
   # Cahart
   factors4 <- summary(lm(I(ret - factors$Risk_free) ~ factors$Rm_minus_Rf + factors$SMB + factors$HML + factors$WML))$coefficients
   
-  # Cahart + Quality
-  factors5 <- summary(lm(I(ret - factors$Risk_free) ~ factors$Rm_minus_Rf + factors$SMB + factors$HML + factors$WML + factors$QMJ))$coefficients
+  # Cahart + Profitability
+  factors5 <- summary(lm(I(ret - factors$Risk_free) ~ factors$Rm_minus_Rf + factors$SMB + factors$HML + factors$WML + factors$PMU))$coefficients
   
   # Type can be the intercept (alpha) or the t-statistics
   if (type == 'Intercept'){
@@ -286,7 +286,7 @@ ret_index_rf <- prod(1 + (index$IBX)) ^ (252/length(index$IBX)) - 1 - ret_rf
 sml <- ret_rf + seq(0.5,1.4, by = 0.1) * ret_index_rf
 
 # create a png plot
-png("fig1.png", height=1600, width=2400, res=250, pointsize=8)
+png("fig1.png", height=800, width=1200, res=250, pointsize=8)
 
 # Generate the graph
 ggplot() + geom_point(data = port_betas_ret, aes(x = Beta, y = Cumulative_return)) + 
@@ -391,12 +391,12 @@ df_mom$LongShort <- calculate_long_short(df_mom[,c(1, 2, 11)])
 tb4_panel_c <- panel_function(df_mom[,-1], index$IBX, factors$Risk_free)
 
 ## Panel D
-df_quality <- read_csv("portfolios\\simple_sort_quality_10.csv", col_types = "Dnnnnnnnnnn")
-df_quality$LongShort <- calculate_long_short(df_quality[,c(1, 2, 11)])
+df_profit <- read_csv("portfolios\\simple_sort_profitability_10.csv", col_types = "Dnnnnnnnnnn")
+df_profit$LongShort <- calculate_long_short(df_profit[,c(1, 2, 11)])
 
-tb4_panel_d <- panel_function(df_quality[,-1], index$IBX, factors$Risk_free)
+tb4_panel_d <- panel_function(df_profit[,-1], index$IBX, factors$Risk_free)
 
-rm(df_size, df_value, df_mom, df_quality)
+rm(df_size, df_value, df_mom, df_profit)
 
 #################################################################
 ##                           Table 5                           ##
@@ -423,12 +423,12 @@ df_mom_vol$LongShort <- calculate_long_short(df_mom_vol[,c(1, 2, 11)])
 tb5_panel_c <- panel_function(df_mom_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
 ## Panel D
-df_quality_vol <- read_csv("portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
-df_quality_vol$LongShort <- calculate_long_short(df_quality_vol[,c(1, 2, 11)])
+df_profit_vol <- read_csv("portfolios\\double_sort_profitability.csv", col_types = "Dnnnnnnnnnn")
+df_profit_vol$LongShort <- calculate_long_short(df_profit_vol[,c(1, 2, 11)])
 
-tb5_panel_d <- panel_function(df_quality_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
+tb5_panel_d <- panel_function(df_profit_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
-rm(df_size_vol, df_value_vol, df_mom_vol, df_quality_vol)
+rm(df_size_vol, df_value_vol, df_mom_vol, df_profit_vol)
 
 #################################################################
 ##                           Table 6                           ##
@@ -470,15 +470,15 @@ for (i in 1:nrow(tb6_panel_c)) {
 rm(s_mom10, d_mom10)
 
 ## Panel D
-s_quality10 <- read_csv("portfolios\\simple_sort_quality_10.csv", col_types = "Dnnnnnnnnnn")
-d_quality10 <- read_csv("portfolios\\double_sort_quality.csv", col_types = "Dnnnnnnnnnn")
+s_profit10 <- read_csv("portfolios\\simple_sort_profitability_10.csv", col_types = "Dnnnnnnnnnn")
+d_profit10 <- read_csv("portfolios\\double_sort_profitability.csv", col_types = "Dnnnnnnnnnn")
 
-tb6_panel_d <- as.data.frame(matrix(nrow = (ncol(s_quality10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
+tb6_panel_d <- as.data.frame(matrix(nrow = (ncol(s_profit10)-1), ncol = 1), row.names = paste0("D", 1:10)) %>% set_names("Dn")
 for (i in 1:nrow(tb6_panel_d)) {
-  tb6_panel_d[i, 1] <- estat_jkm(d_quality10[,i+1, drop = TRUE], s_quality10[,i+1, drop = TRUE], index$IBX, factors$Risk_free)
+  tb6_panel_d[i, 1] <- estat_jkm(d_profit10[,i+1, drop = TRUE], s_profit10[,i+1, drop = TRUE], index$IBX, factors$Risk_free)
 }
 
-rm(s_quality10, d_quality10, i)
+rm(s_profit10, d_profit10, i)
 
 ##################################################################
 ##                           Figure 2                           ##
@@ -496,7 +496,7 @@ trad_strat_acumul <- apply(trad_strat[,-1], 2, function(x) cumprod(1 + x) - 1)
 trad_strat_acumul <- data.frame(Date = trad_strat$Date, trad_strat_acumul, Risk_free = cumprod(1 + rf_tb7$Risk_free))
 
 # create a png plot
-png("fig2.png", height=1600, width=2400, res=250, pointsize=8)
+png("fig2.png", height=800, width=1200, res=250, pointsize=8)
 
 ggplot() + geom_line(data = trad_strat_acumul, aes(x = Date, y = Beta, colour = "Pure Beta")) + 
   geom_line(data = trad_strat_acumul, aes(x = Date, y = BetaBlume, colour = "Adjusted Beta")) +
@@ -545,7 +545,7 @@ wb <- createWorkbook(type="xlsx")
 TITLE_STYLE <- CellStyle(wb)+ Font(wb,  heightInPoints=16, 
                                    color="blue", isBold=TRUE, underline=1)
 SUB_TITLE_STYLE <- CellStyle(wb) + 
-  Font(wb,  heightInPoints=14, 
+  Font(wb,  heightInPoints=11, 
        isItalic=FALSE, isBold=TRUE)
 # Styles for the data table row/column names
 TABLE_ROWNAMES_STYLE <- CellStyle(wb) + Font(wb, isBold=TRUE)
@@ -624,15 +624,15 @@ title_vector <- c('Panel A: Alpha', 'Panel B: t-value')
 add_excel_sheet('T3', list_dfs, title_vector)
 
 list_dfs <- list(tb4_panel_a, tb4_panel_b, tb4_panel_c, tb4_panel_d)
-title_vector <- c('Panel A: Size', 'Panel B: Value', 'Panel C: Momentum', 'Panel D: Quality')
+title_vector <- c('Panel A: Size', 'Panel B: Value', 'Panel C: Momentum', 'Panel D: Profitability')
 add_excel_sheet('T4', list_dfs, title_vector)
 
 list_dfs <- list(tb5_panel_a, tb5_panel_b, tb5_panel_c, tb5_panel_d)
-title_vector <- c('Panel A: Size', 'Panel B: Value', 'Panel C: Momentum', 'Panel D: Quality')
+title_vector <- c('Panel A: Size', 'Panel B: Value', 'Panel C: Momentum', 'Panel D: Profitability')
 add_excel_sheet('T5', list_dfs, title_vector)
 
 list_dfs <- list(tb6_panel_a, tb6_panel_b, tb6_panel_c, tb6_panel_d)
-title_vector <- c('Panel A: Size', 'Panel B: Value', 'Panel C: Momentum', 'Panel D: Quality')
+title_vector <- c('Panel A: Size', 'Panel B: Value', 'Panel C: Momentum', 'Panel D: Profitability')
 add_excel_sheet('T6', list_dfs, title_vector)
 
 list_dfs <- list(tb7)
