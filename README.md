@@ -33,6 +33,8 @@
 
 * main_code.R: take the clean data, the portfolio returns, and returns a .xlsx file containing all the tables used in the article.
 
+* draft_manuscript.docx: Draft Manuscript
+
 # Data Availability Statement
 
 All the Excel files used to suport the findings of this study have been deposited in the "raw_data" folder.
@@ -50,7 +52,6 @@ R 4.1.1 [64-bit]
 * readxl (1.4.0)
 * writexl (1.4.0)
 * xlsx (0.6.5)
-
 
 ### Comentary about the xlsx package
 
