@@ -18,14 +18,44 @@
 ###########################################################################
 ###########################################################################
 
-## Pass a data frame containing the date, the long and the short returns
-calculate_long_short <- function(ret){
-  # Calculate the Long e Short portfolio returns
-  data_xts <- xts(ret[,-1], ret$Date)
-  long_short <- Return.portfolio(data_xts, weights = c(1, -1), rebalance_on = 'months')
+## https://stats.stackexchange.com/questions/289457/proof-for-the-standard-error-of-parameters-in-linear-regression
+calculate_intercept_t_stat <- function(daily_alpha, beta, ret_port, ret_mkt_rf){
+  exp_port <- daily_alpha + beta * ret_mkt_rf
+  error <- ret_port - exp_port
   
-  return(long_short$portfolio.returns)
+  var_beta_0 <- var(error) * ((1 / length(ret_port)) + (mean(ret_mkt_rf)^2) / sum((ret_mkt_rf - mean(ret_mkt_rf))^2))
+  
+  se_beta_0 <- sqrt(var_beta_0)
+  
+  t_stat_beta_0 <- daily_alpha / se_beta_0
+  
+  return(t_stat_beta_0)
 }
+
+## Pass a data frame containing the date, the long and the short returns
+### With this we will update our 'stat_ret' table so it follows the metodology from Blitz
+update_stat_ret <- function(table_func_df, ret_port, ret_mkt_rf){
+  
+  d1 <- table_func_df[, 1]
+  dn <- table_func_df[, ncol(table_func_df)-2]
+  
+  d1_dn <- d1 - dn
+  
+  # We keep the volatility from the l e s portfolio
+  d1_dn[2] <- table_func_df[, ncol(table_func_df)-1][2]
+  
+  # Sharpe and z stat are omitted
+  d1_dn[c(3,4)] <- NA
+  
+  # We must adapt alpha t stat
+  daily_alpha <- (d1_dn[7] / 100 + 1) ^ (1 / 252) - 1
+  d1_dn[8] <- calculate_intercept_t_stat(daily_alpha, d1_dn[6], ret_port, ret_mkt_rf)
+  d1_dn[8] <- round(d1_dn[8], 2)
+  
+  return(d1_dn)
+  
+}
+
 
 ## https://papers.ssrn.com/sol3/papers.cfm?abstract_id=412588
 ### shrp1: Sharpe ratio of the first portfolio
@@ -122,21 +152,10 @@ panel_function <- function(df_ret, ind, rf){
   
   colnames(panel) <- c(paste0(nom, 1:n_ports), paste0(nom, '1-', nom, n_ports), "IBX")
   
+  panel[,(ncol(panel)-1)] <- update_stat_ret(panel, (df_panel[, 1] - df_panel[, (ncol(df_panel)-2)]), (ind - rf))
+  
   # Some statistics don't apply to all portfolios (beta for the market index returns, e.g.)
-  panel[c(3, 4), (ncol(panel)-1)] <- NA
   panel[c(4, 6, 7, 8), ncol(panel)] <- NA
-  
-  # The regression of the Long and Short portfolio is different because it does not have a risk free component
-  regres_ls <- summary(lm(df_ret$LongShort ~ I(ind - rf)))$coefficients
-  ## Portfolio annualized alpha
-  alpha_regres <- round((prod(1 + regres_ls[1, 1]) ^ 12 - 1) * 100, 2)
-  ## t-value alpha
-  t_alpha <- round(regres_ls[1, 3], 2)
-  ## Portfolio beta
-  beta_regres <- round(regres_ls[2, 1], 2)
-  
-  # Correct the panel data frame
-  panel[c(6, 7, 8), (ncol(panel)-1)] <- c(beta_regres, alpha_regres, t_alpha)
   
   return(panel)
   
@@ -217,12 +236,7 @@ factor_analysis <- function(ret, type, col_name){
 # Import the base portfolio: Low Vol factor 3 portfolios
 data <- read_csv("portfolios\\simple_sort_vol_3.csv", col_types = "Dnnn") %>% 
   set_names(c("Date", "LowVol", "MidVol", "HighVol"))
-
-# Calculate the Long e Short portfolio returns
-data_xts <- xts(data[,c(-1, -3)], data$Date)
-long_short <- Return.portfolio(data_xts, weights = c(1, -1), rebalance_on = 'months')
-# Add it to the original data frame
-data$LongShort <- long_short$portfolio.returns
+data$LongShort <- data$LowVol - data$HighVol
 
 rm(data_xts, long_short)
 
@@ -308,7 +322,7 @@ rm(data_fig, i, reg_mod_coef, sml, beta_vector, port_betas_ret, ret_rf, ret_inde
 
 ## Panel A
 df_vol_3 <- read_csv("portfolios\\simple_sort_vol_3.csv", col_types = "Dnnnnnnnnnn")
-df_vol_3$LongShort <- calculate_long_short(df_vol_3[,c(1, 2, ncol(df_vol_3))])
+df_vol_3$LongShort <- df_vol_3$D1 - df_vol_3$D3
 
 tb1_panel_a <- panel_function(df_vol_3[,-1], index$IBX, factors$Risk_free)
 
@@ -316,6 +330,8 @@ tb1_panel_a <- panel_function(df_vol_3[,-1], index$IBX, factors$Risk_free)
 tb1_panel_b <- lapply(df_vol_3[,-1], function(x) avg_max_loss(x))
 tb1_panel_b <- do.call("cbind", tb1_panel_b)
 tb1_panel_b <- data.frame(tb1_panel_b, avg_max_loss(index$IBX)) %>% set_names(c(paste0("P", 1:3), "P1-P3", "IBX"))
+tb1_panel_b$`P1-P3` <- tb1_panel_b$P1 - tb1_panel_b$P3
+tb1_panel_b$`P1-P3`[3] <- NA
 
 rm(df_vol_3)
 
@@ -374,25 +390,28 @@ tb3_panel_b <- data.frame(factor_analysis(data$LowVol, "t", "Low Vol."),
 
 ## Panel A
 df_size <- read_csv("portfolios\\simple_sort_size_10.csv", col_types = "Dnnnnnnnnnn")
-df_size$LongShort <- calculate_long_short(df_size[,c(1, 2, 11)])
+df_size$LongShort <- df_size$D1 - df_size$D10
 
 tb4_panel_a <- panel_function(df_size[,-1], index$IBX, factors$Risk_free)
 
 ## Panel B
 df_value <- read_csv("portfolios\\simple_sort_value_10.csv", col_types = "Dnnnnnnnnnn")
-df_value$LongShort <- calculate_long_short(df_value[,c(1, 2, 11)])
+df_value$LongShort <- df_value$D1 - df_value$D10
 
 tb4_panel_b <- panel_function(df_value[,-1], index$IBX, factors$Risk_free)
 
 ## Panel C
 df_mom <- read_csv("portfolios\\simple_sort_mom_10.csv", col_types = "Dnnnnnnnnnn")
-df_mom$LongShort <- calculate_long_short(df_mom[,c(1, 2, 11)])
+df_mom$LongShort <- df_mom$D1 - df_mom$D10
 
 tb4_panel_c <- panel_function(df_mom[,-1], index$IBX, factors$Risk_free)
 
+mean(df_mom$D1)
+mean(df_mom$D10)
+
 ## Panel D
 df_profit <- read_csv("portfolios\\simple_sort_profitability_10.csv", col_types = "Dnnnnnnnnnn")
-df_profit$LongShort <- calculate_long_short(df_profit[,c(1, 2, 11)])
+df_profit$LongShort <- df_profit$D1 - df_profit$D10
 
 tb4_panel_d <- panel_function(df_profit[,-1], index$IBX, factors$Risk_free)
 
@@ -406,25 +425,25 @@ rm(df_size, df_value, df_mom, df_profit)
 
 ## Panel A
 df_size_vol <- read_csv("portfolios\\double_sort_size.csv", col_types = "Dnnnnnnnnnn")
-df_size_vol$LongShort <- calculate_long_short(df_size_vol[,c(1, 2, 11)])
+df_size_vol$LongShort <- df_size_vol$D1 - df_size_vol$D10
 
 tb5_panel_a <- panel_function(df_size_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
 ## Panel B
 df_value_vol <- read_csv("portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
-df_value_vol$LongShort <- calculate_long_short(df_value_vol[,c(1, 2, 11)])
+df_value_vol$LongShort <- df_value_vol$D1 - df_value_vol$D10
 
 tb5_panel_b <- panel_function(df_value_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
 ## Panel C
 df_mom_vol <- read_csv("portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
-df_mom_vol$LongShort <- calculate_long_short(df_mom_vol[,c(1, 2, 11)])
+df_mom_vol$LongShort <- df_mom_vol$D1 - df_mom_vol$D10
 
 tb5_panel_c <- panel_function(df_mom_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
 ## Panel D
 df_profit_vol <- read_csv("portfolios\\double_sort_profitability.csv", col_types = "Dnnnnnnnnnn")
-df_profit_vol$LongShort <- calculate_long_short(df_profit_vol[,c(1, 2, 11)])
+df_profit_vol$LongShort <- df_profit_vol$D1 - df_profit_vol$D10
 
 tb5_panel_d <- panel_function(df_profit_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
