@@ -18,23 +18,9 @@
 ###########################################################################
 ###########################################################################
 
-## https://stats.stackexchange.com/questions/289457/proof-for-the-standard-error-of-parameters-in-linear-regression
-calculate_intercept_t_stat <- function(daily_alpha, beta, ret_port, ret_mkt_rf){
-  exp_port <- daily_alpha + beta * ret_mkt_rf
-  error <- ret_port - exp_port
-  
-  var_beta_0 <- var(error) * ((1 / length(ret_port)) + (mean(ret_mkt_rf)^2) / sum((ret_mkt_rf - mean(ret_mkt_rf))^2))
-  
-  se_beta_0 <- sqrt(var_beta_0)
-  
-  t_stat_beta_0 <- daily_alpha / se_beta_0
-  
-  return(t_stat_beta_0)
-}
-
 ## Pass a data frame containing the date, the long and the short returns
 ### With this we will update our 'stat_ret' table so it follows the metodology from Blitz
-update_stat_ret <- function(table_func_df, ret_port, ret_mkt_rf){
+update_stat_ret <- function(table_func_df, ret_d1, ret_dn){
   
   d1 <- table_func_df[, 1]
   dn <- table_func_df[, ncol(table_func_df)-2]
@@ -48,9 +34,8 @@ update_stat_ret <- function(table_func_df, ret_port, ret_mkt_rf){
   d1_dn[c(3,4)] <- NA
   
   # We must adapt alpha t stat
-  daily_alpha <- (d1_dn[7] / 100 + 1) ^ (1 / 252) - 1
-  d1_dn[8] <- calculate_intercept_t_stat(daily_alpha, d1_dn[6], ret_port, ret_mkt_rf)
-  d1_dn[8] <- round(d1_dn[8], 2)
+  t_stat <- t.test(ret_d1, ret_dn, alternative = "two.sided", var.equal = FALSE)
+  d1_dn[8] <- round(t_stat$statistic, 2)
   
   return(d1_dn)
   
@@ -152,7 +137,7 @@ panel_function <- function(df_ret, ind, rf){
   
   colnames(panel) <- c(paste0(nom, 1:n_ports), paste0(nom, '1-', nom, n_ports), "IBX")
   
-  panel[,(ncol(panel)-1)] <- update_stat_ret(panel, (df_panel[, 1] - df_panel[, (ncol(df_panel)-2)]), (ind - rf))
+  panel[,(ncol(panel)-1)] <- update_stat_ret(panel, df_ret[, 1, drop = TRUE], df_ret[, (ncol(df_ret)-1), drop = TRUE])
   
   # Some statistics don't apply to all portfolios (beta for the market index returns, e.g.)
   panel[c(4, 6, 7, 8), ncol(panel)] <- NA
@@ -237,8 +222,6 @@ factor_analysis <- function(ret, type, col_name){
 data <- read_csv("portfolios\\simple_sort_vol_3.csv", col_types = "Dnnn") %>% 
   set_names(c("Date", "LowVol", "MidVol", "HighVol"))
 data$LongShort <- data$LowVol - data$HighVol
-
-rm(data_xts, long_short)
 
 # Import the index returns
 index <- read_csv("brazil\\index_returns.csv", col_types = "Dn") %>%
