@@ -41,6 +41,8 @@ All the Excel files used to suport the findings of this study have been deposite
 
 # Computational Requirements
 
+Java 1.8.0_331
+
 R 4.1.1 [64-bit]
 
 * tidyverse (1.3.1)
