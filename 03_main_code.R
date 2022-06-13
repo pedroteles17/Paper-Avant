@@ -286,12 +286,14 @@ sml <- ret_rf + seq(0.5,1.4, by = 0.1) * ret_index_rf
 png("fig1.png", height=800, width=1200, res=250, pointsize=8)
 
 # Generate the graph
-ggplot() + geom_point(data = port_betas_ret, aes(x = Beta, y = Cumulative_return)) + 
+fig1 <- ggplot() + geom_point(data = port_betas_ret, aes(x = Beta, y = Cumulative_return)) + 
   geom_abline(slope = reg_mod_coef[2], intercept = reg_mod_coef[1], colour = "yellow3", linetype = "dashed") +
   geom_line(aes(x = seq(0.5,1.4, by = 0.1), y = sml), colour = "dark blue") + theme_classic() + 
   geom_text(data = port_betas_ret, aes(label = Name, x = Beta, y = Cumulative_return), hjust = 0.5,  vjust = -1) +
   xlab("Beta") + ylab("Annualized Return") + 
   scale_y_continuous(expand = c(0.01, 0.02), labels = scales::percent_format(accuracy = 1)) 
+
+print(fig1)
 
 dev.off()
 
@@ -377,11 +379,19 @@ df_size$LongShort <- df_size$D1 - df_size$D10
 
 tb4_panel_a <- panel_function(df_size[,-1], index$IBX, factors$Risk_free)
 
+### We eliminate the intermediate books
+tb4_panel_a <- tb4_panel_a %>%
+  select(!c(D4, D5, D6, D7))
+
 ## Panel B
 df_value <- read_csv("portfolios\\simple_sort_value_10.csv", col_types = "Dnnnnnnnnnn")
 df_value$LongShort <- df_value$D1 - df_value$D10
 
 tb4_panel_b <- panel_function(df_value[,-1], index$IBX, factors$Risk_free)
+
+### We eliminate the intermediate books
+tb4_panel_b <- tb4_panel_b %>%
+  select(!c(D4, D5, D6, D7))
 
 ## Panel C
 df_mom <- read_csv("portfolios\\simple_sort_mom_10.csv", col_types = "Dnnnnnnnnnn")
@@ -389,14 +399,19 @@ df_mom$LongShort <- df_mom$D1 - df_mom$D10
 
 tb4_panel_c <- panel_function(df_mom[,-1], index$IBX, factors$Risk_free)
 
-mean(df_mom$D1)
-mean(df_mom$D10)
+### We eliminate the intermediate books
+tb4_panel_c <- tb4_panel_c %>%
+  select(!c(D4, D5, D6, D7))
 
 ## Panel D
 df_profit <- read_csv("portfolios\\simple_sort_profitability_10.csv", col_types = "Dnnnnnnnnnn")
 df_profit$LongShort <- df_profit$D1 - df_profit$D10
 
 tb4_panel_d <- panel_function(df_profit[,-1], index$IBX, factors$Risk_free)
+
+### We eliminate the intermediate books
+tb4_panel_d <- tb4_panel_d %>%
+  select(!c(D4, D5, D6, D7))
 
 rm(df_size, df_value, df_mom, df_profit)
 
@@ -412,11 +427,19 @@ df_size_vol$LongShort <- df_size_vol$D1 - df_size_vol$D10
 
 tb5_panel_a <- panel_function(df_size_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
+### We eliminate the intermediate books
+tb5_panel_a <- tb5_panel_a %>%
+  select(!c(D4, D5, D6, D7))
+
 ## Panel B
 df_value_vol <- read_csv("portfolios\\double_sort_value.csv", col_types = "Dnnnnnnnnnn")
 df_value_vol$LongShort <- df_value_vol$D1 - df_value_vol$D10
 
 tb5_panel_b <- panel_function(df_value_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
+
+### We eliminate the intermediate books
+tb5_panel_b <- tb5_panel_b %>%
+  select(!c(D4, D5, D6, D7))
 
 ## Panel C
 df_mom_vol <- read_csv("portfolios\\double_sort_mom.csv", col_types = "Dnnnnnnnnnn")
@@ -424,11 +447,19 @@ df_mom_vol$LongShort <- df_mom_vol$D1 - df_mom_vol$D10
 
 tb5_panel_c <- panel_function(df_mom_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
 
+### We eliminate the intermediate books
+tb5_panel_c <- tb5_panel_c %>%
+  select(!c(D4, D5, D6, D7))
+
 ## Panel D
 df_profit_vol <- read_csv("portfolios\\double_sort_profitability.csv", col_types = "Dnnnnnnnnnn")
 df_profit_vol$LongShort <- df_profit_vol$D1 - df_profit_vol$D10
 
 tb5_panel_d <- panel_function(df_profit_vol[,-1], index$IBX, factors$Risk_free)[ ,-11]
+
+### We eliminate the intermediate books
+tb5_panel_d <- tb5_panel_d %>%
+  select(!c(D4, D5, D6, D7))
 
 rm(df_size_vol, df_value_vol, df_mom_vol, df_profit_vol)
 
@@ -500,12 +531,14 @@ trad_strat_acumul <- data.frame(Date = trad_strat$Date, trad_strat_acumul, Risk_
 # create a png plot
 png("fig2.png", height=800, width=1200, res=250, pointsize=8)
 
-ggplot() + geom_line(data = trad_strat_acumul, aes(x = Date, y = Beta, colour = "Pure Beta")) + 
+fig2 <- ggplot() + geom_line(data = trad_strat_acumul, aes(x = Date, y = Beta, colour = "Pure Beta")) + 
   geom_line(data = trad_strat_acumul, aes(x = Date, y = BetaBlume, colour = "Adjusted Beta")) +
   geom_line(data = trad_strat_acumul, aes(x = Date, y = OrigLS, colour = "Simple LS")) +
   geom_line(data = trad_strat_acumul, aes(x = Date, y = Risk_free, colour = "Risk Free")) + theme_classic() + 
   xlab("") + ylab('') + scale_color_manual(values = c("Pure Beta" = "darkblue", "Adjusted Beta" = "dark green", "Simple LS" = "dark red", "Risk Free" = "black")) +
   theme(legend.position="bottom") + theme(legend.title=element_blank())
+
+print(fig2)
 
 dev.off()
 
@@ -572,12 +605,12 @@ xlsx.addTitle<-function(sheet, rowIndex, title, titleStyle){
   setCellStyle(sheetTitle[[1,1]], titleStyle)
 }
 
-# Change column width
-setColumnWidth(sheet, colIndex=c(1:ncol(tb1_panel_a)), colWidth=11)
-
 add_excel_sheet <- function(sheetName, list_dfs, title_vector){
   # Create a new sheet in the workbook
   sheet <- createSheet(wb, sheetName = sheetName)
+  
+  # Change column width
+  setColumnWidth(sheet, colIndex=c(1:ncol(list_dfs[[1]])), colWidth=11)
   
   cont_rows <- 0
   for (i in seq_along(list_dfs)) {
@@ -651,3 +684,5 @@ res<-file.remove("fig2.png")
 
 # Save the workbook to a file
 saveWorkbook(wb, "graphs_tables.xlsx")
+
+rm(list_dfs, sheet, SUB_TITLE_STYLE, TABLE_COLNAMES_STYLE, TABLE_ROWNAMES_STYLE, wb, TITLE_STYLE, res, title_vector)
