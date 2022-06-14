@@ -52,7 +52,7 @@ The file "00_setup.R" will install all dependencies (latest version), and should
 * lubridate (1.8.0)
 * PerformanceAnalytics (2.0.4)
 * parallel (4.1.1)
-* furrr (0.2.3)
+* furrr (0.3.0)
 * readxl (1.4.0)
 * writexl (1.4.0)
 * xlsx (0.6.5)
