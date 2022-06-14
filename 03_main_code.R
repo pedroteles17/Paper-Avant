@@ -282,9 +282,6 @@ ret_index_rf <- prod(1 + (index$IBX)) ^ (252/length(index$IBX)) - 1 - ret_rf
 # Security Market Line https://www.investopedia.com/terms/s/sml.asp
 sml <- ret_rf + seq(0.5,1.4, by = 0.1) * ret_index_rf
 
-# create a png plot
-png("fig1.png", height=800, width=1200, res=250, pointsize=8)
-
 # Generate the graph
 fig1 <- ggplot() + geom_point(data = port_betas_ret, aes(x = Beta, y = Cumulative_return)) + 
   geom_abline(slope = reg_mod_coef[2], intercept = reg_mod_coef[1], colour = "yellow3", linetype = "dashed") +
@@ -294,8 +291,6 @@ fig1 <- ggplot() + geom_point(data = port_betas_ret, aes(x = Beta, y = Cumulativ
   scale_y_continuous(expand = c(0.01, 0.02), labels = scales::percent_format(accuracy = 1)) 
 
 print(fig1)
-
-dev.off()
 
 rm(data_fig, i, reg_mod_coef, sml, beta_vector, port_betas_ret, ret_rf, ret_index_rf)
 
@@ -528,9 +523,6 @@ rf_tb7 <- rf %>% dplyr::filter(Date > '2003-12-31')
 trad_strat_acumul <- apply(trad_strat[,-1], 2, function(x) cumprod(1 + x) - 1)
 trad_strat_acumul <- data.frame(Date = trad_strat$Date, trad_strat_acumul, Risk_free = cumprod(1 + rf_tb7$Risk_free))
 
-# create a png plot
-png("fig2.png", height=800, width=1200, res=250, pointsize=8)
-
 fig2 <- ggplot() + geom_line(data = trad_strat_acumul, aes(x = Date, y = Beta, colour = "Pure Beta")) + 
   geom_line(data = trad_strat_acumul, aes(x = Date, y = BetaBlume, colour = "Adjusted Beta")) +
   geom_line(data = trad_strat_acumul, aes(x = Date, y = OrigLS, colour = "Simple LS")) +
@@ -539,8 +531,6 @@ fig2 <- ggplot() + geom_line(data = trad_strat_acumul, aes(x = Date, y = Beta, c
   theme(legend.position="bottom") + theme(legend.title=element_blank())
 
 print(fig2)
-
-dev.off()
 
 #################################################################
 ##                           Table 7                           ##
@@ -560,129 +550,5 @@ rm(stat_beta, index_tb7, max_drawd, rf_tb7, trad_strat, trad_strat_acumul, trad_
 
 rm(data, factors, index, rf)
 
-###########################################################################
-###########################################################################
-###                                                                     ###
-###                              SECTION 4:                             ###
-###                             EXPORT DATA                             ###
-###                                                                     ###
-###########################################################################
-###########################################################################
-
-# http://www.sthda.com/english/wiki/r-xlsx-package-a-quick-start-guide-to-manipulate-excel-files-in-r
-
-# create a new workbook for outputs
-wb <- createWorkbook(type="xlsx")
-
-# Define some cell styles
-#++++++++++++++++++++
-# Title and sub title styles
-TITLE_STYLE <- CellStyle(wb)+ Font(wb,  heightInPoints=16, 
-                                   color="blue", isBold=TRUE, underline=1)
-SUB_TITLE_STYLE <- CellStyle(wb) + 
-  Font(wb,  heightInPoints=11, 
-       isItalic=FALSE, isBold=TRUE)
-# Styles for the data table row/column names
-TABLE_ROWNAMES_STYLE <- CellStyle(wb) + Font(wb, isBold=TRUE)
-TABLE_COLNAMES_STYLE <- CellStyle(wb) + Font(wb, isBold=TRUE) +
-  Alignment(wrapText=TRUE, horizontal="ALIGN_CENTER") +
-  Border(color="black", position=c("BOTTOM"), 
-         pen=c("BORDER_THIN")) 
 
 
-#++++++++++++++++++++++++
-# Helper function to add titles
-#++++++++++++++++++++++++
-# - sheet : sheet object to contain the title
-# - rowIndex : numeric value indicating the row to 
-#contain the title
-# - title : the text to use as title
-# - titleStyle : style object to use for title
-xlsx.addTitle<-function(sheet, rowIndex, title, titleStyle){
-  rows <-createRow(sheet,rowIndex=rowIndex)
-  sheetTitle <-createCell(rows, colIndex=1)
-  setCellValue(sheetTitle[[1,1]], title)
-  setCellStyle(sheetTitle[[1,1]], titleStyle)
-}
-
-add_excel_sheet <- function(sheetName, list_dfs, title_vector){
-  # Create a new sheet in the workbook
-  sheet <- createSheet(wb, sheetName = sheetName)
-  
-  # Change column width
-  setColumnWidth(sheet, colIndex=c(1:ncol(list_dfs[[1]])), colWidth=11)
-  
-  cont_rows <- 0
-  for (i in seq_along(list_dfs)) {
-    cont_rows <- cont_rows + 1
-    # Add sub title
-    xlsx.addTitle(sheet, rowIndex=cont_rows, 
-                  title=title_vector[i],
-                  titleStyle = SUB_TITLE_STYLE)
-    
-    cont_rows <- cont_rows + 1
-    
-    # Center align every columns
-    TABLE_COL_STYLE <- CellStyle(wb) + Alignment(wrapText=TRUE, horizontal="ALIGN_CENTER")
-    TABLE_COL_STYLE <- rep(list(TABLE_COL_STYLE), ncol(list_dfs[[i]]))
-    names(TABLE_COL_STYLE) <- 1:ncol(list_dfs[[i]])
-    
-    # Add a table
-    addDataFrame(list_dfs[[i]], sheet, startRow=cont_rows, startColumn=1, 
-                 colnamesStyle = TABLE_COLNAMES_STYLE,
-                 rownamesStyle = TABLE_ROWNAMES_STYLE,
-                 colStyle = TABLE_COL_STYLE)
-    
-    cont_rows <- cont_rows + nrow(list_dfs[[i]]) + 1
-    
-  }
-}
-
-# Create a new sheet to contain the plot
-sheet <-createSheet(wb, sheetName = "F1")
-# Add the plot created previously
-addPicture("fig1.png", sheet, scale = 1, startRow = 3,
-           startColumn = 1)
-# Remove the plot from the disk
-res<-file.remove("fig1.png")
-
-list_dfs <- list(tb1_panel_a, tb1_panel_b)
-title_vector <- c('Panel A', 'Panel B')
-add_excel_sheet('T1', list_dfs, title_vector)
-
-list_dfs <- list(tb2_panel_a, tb2_panel_b, tb2_panel_c)
-title_vector <- c('Panel A: 2003 - 2008', 'Panel B: 2009', 'Panel C: 2010 - 2021')
-add_excel_sheet('T2', list_dfs, title_vector)
-
-list_dfs <- list(tb3_panel_a, tb3_panel_b)
-title_vector <- c('Panel A: Alpha', 'Panel B: t-value')
-add_excel_sheet('T3', list_dfs, title_vector)
-
-list_dfs <- list(tb4_panel_a, tb4_panel_b, tb4_panel_c, tb4_panel_d)
-title_vector <- c('Panel A: Size', 'Panel B: Value', 'Panel C: Momentum', 'Panel D: Profitability')
-add_excel_sheet('T4', list_dfs, title_vector)
-
-list_dfs <- list(tb5_panel_a, tb5_panel_b, tb5_panel_c, tb5_panel_d)
-title_vector <- c('Panel A: Size', 'Panel B: Value', 'Panel C: Momentum', 'Panel D: Profitability')
-add_excel_sheet('T5', list_dfs, title_vector)
-
-list_dfs <- list(tb6_panel_a, tb6_panel_b, tb6_panel_c, tb6_panel_d)
-title_vector <- c('Panel A: Size', 'Panel B: Value', 'Panel C: Momentum', 'Panel D: Profitability')
-add_excel_sheet('T6', list_dfs, title_vector)
-
-list_dfs <- list(tb7)
-title_vector <- c('Panel A')
-add_excel_sheet('T7', list_dfs, title_vector)
-
-# Create a new sheet to contain the plot
-sheet <-createSheet(wb, sheetName = "F2")
-# Add the plot created previously
-addPicture("fig2.png", sheet, scale = 1, startRow = 3,
-           startColumn = 1)
-# Remove the plot from the disk
-res<-file.remove("fig2.png")
-
-# Save the workbook to a file
-saveWorkbook(wb, "graphs_tables.xlsx")
-
-rm(list_dfs, sheet, SUB_TITLE_STYLE, TABLE_COLNAMES_STYLE, TABLE_ROWNAMES_STYLE, wb, TITLE_STYLE, res, title_vector)
