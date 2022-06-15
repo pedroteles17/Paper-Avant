@@ -519,19 +519,6 @@ trad_strat <- read_csv("portfolios\\trad_strat.csv", col_types = "Dnnn")
 index_tb7 <- index %>% dplyr::filter(Date > '2003-12-31')
 rf_tb7 <- rf %>% dplyr::filter(Date > '2003-12-31')
 
-## Figure 2
-trad_strat_acumul <- apply(trad_strat[,-1], 2, function(x) cumprod(1 + x) - 1)
-trad_strat_acumul <- data.frame(Date = trad_strat$Date, trad_strat_acumul, Risk_free = cumprod(1 + rf_tb7$Risk_free))
-
-fig2 <- ggplot() + geom_line(data = trad_strat_acumul, aes(x = Date, y = Beta, colour = "Pure Beta")) + 
-  geom_line(data = trad_strat_acumul, aes(x = Date, y = BetaBlume, colour = "Adjusted Beta")) +
-  geom_line(data = trad_strat_acumul, aes(x = Date, y = OrigLS, colour = "Simple LS")) +
-  geom_line(data = trad_strat_acumul, aes(x = Date, y = Risk_free, colour = "Risk Free")) + theme_classic() + 
-  xlab("") + ylab('') + scale_color_manual(values = c("Pure Beta" = "darkblue", "Adjusted Beta" = "dark green", "Simple LS" = "dark red", "Risk Free" = "black")) +
-  theme(legend.position="bottom") + theme(legend.title=element_blank())
-
-print(fig2)
-
 #################################################################
 ##                           Table 7                           ##
 #################################################################
@@ -546,7 +533,7 @@ max_drawd <- data.frame(round(maxDrawdown(trad_strat_xts$Beta)*100, 2), round(ma
  
 tb7 <- rbind(stat_beta, max_drawd)
 
-rm(stat_beta, index_tb7, max_drawd, rf_tb7, trad_strat, trad_strat_acumul, trad_strat_xts)
+rm(stat_beta, index_tb7, max_drawd, rf_tb7, trad_strat, trad_strat_xts)
 
 rm(data, factors, index, rf)
 
